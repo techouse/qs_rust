@@ -4,6 +4,9 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   rustdoc:
     name: rustdoc
@@ -22,4 +25,25 @@ jobs:
       - name: Build public docs
         env:
           RUSTDOCFLAGS: -D warnings --cfg docsrs
-        run: cargo doc --no-deps --all-features
+        run: |
+          set -euo pipefail
+
+          cargo doc --locked --no-deps --all-features --lib
+
+          cat > target/doc/index.html <<'EOF'
+          <!doctype html>
+          <meta charset="utf-8">
+          <meta http-equiv="refresh" content="0; url=./qs_rust/index.html">
+          <link rel="canonical" href="./qs_rust/index.html">
+          <title>qs_rust docs</title>
+          <a href="./qs_rust/index.html">Open qs_rust docs</a>
+          EOF
+
+      - name: Deploy docs to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/doc
+          force_orphan: true
+          enable_jekyll: false
