@@ -1,0 +1,144 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+jobs:
+  stable:
+    name: Stable test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          # TODO re-enable when making public so that we don't exhaust our GitHub Actions minutes on private repos
+          # - macos-latest
+          # - windows-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Test all features
+        run: cargo test --all-features --locked
+
+  feature-matrix:
+    name: Feature matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Default features
+        run: cargo test --locked
+
+      - name: Serde feature
+        run: cargo test --locked --features serde
+
+      - name: Chrono feature
+        run: cargo test --locked --features chrono
+
+      - name: Time feature
+        run: cargo test --locked --features time
+
+      - name: Serde + chrono compile check
+        run: cargo test --locked --no-run --features "serde chrono"
+
+      - name: Serde + time compile check
+        run: cargo test --locked --no-run --features "serde time"
+
+      - name: Chrono + time compile check
+        run: cargo test --locked --no-run --features "chrono time"
+
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Format check
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Doc tests
+        run: cargo test --doc --all-features --locked
+
+  parity:
+    name: Node qs parity
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/comparison/js/package-lock.json
+
+      - name: Bootstrap Node comparison fixture
+        working-directory: tests/comparison/js
+        run: npm ci
+
+      - name: Node-backed parity
+        run: cargo test --locked --test comparison --test parity_decode --test parity_encode
+
+  msrv:
+    name: MSRV (1.88)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@1.88.0
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Test all features on MSRV
+        run: cargo test --all-features --locked
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Package contents
+        run: |
+          cargo package --locked --list > /tmp/package-list.txt
+          ! grep -E '^(fuzz/|tests/|scripts/|perf/|\.github/|\.vscode/|\.gitignore$|AGENTS\.md|pyproject\.toml$|src/bin/|src/.*/tests(/|\.rs$))' /tmp/package-list.txt
+
+      - name: Package check
+        run: cargo package --locked

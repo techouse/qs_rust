@@ -1,0 +1,25 @@
+name: Docs
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  rustdoc:
+    name: rustdoc
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Doc tests
+        run: cargo test --doc --all-features --locked
+
+      - name: Build public docs
+        env:
+          RUSTDOCFLAGS: -D warnings --cfg docsrs
+        run: cargo doc --no-deps --all-features
