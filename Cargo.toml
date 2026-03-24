@@ -20,6 +20,8 @@ exclude = [
     ".gitignore",
     ".vscode/**",
     "AGENTS.md",
+    "CHANGELOG.md",
+    "CODE_OF_CONDUCT.md",
     "docs/**",
     "fuzz/**",
     "logo.png",
@@ -29,6 +31,7 @@ exclude = [
     "src/**/tests/**",
     "src/**/tests.rs",
     "src/bin/**",
+    "SECURITY.md",
     "tests/**",
 ]
 
