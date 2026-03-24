@@ -16,6 +16,9 @@ jobs:
   stable:
     name: Stable test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -28,10 +31,38 @@ jobs:
       - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Install cargo-llvm-cov
+        if: matrix.os == 'ubuntu-latest' && (env.CODECOV_TOKEN != '' || env.CODACY_PROJECT_TOKEN != '')
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Test all features with coverage
+        if: matrix.os == 'ubuntu-latest' && (env.CODECOV_TOKEN != '' || env.CODACY_PROJECT_TOKEN != '')
+        run: cargo llvm-cov --all-features --locked --lcov --output-path lcov.info
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: techouse/qs_rust
+          files: lcov.info
+          fail_ci_if_error: true
+
+      - name: Upload coverage to Codacy
+        if: matrix.os == 'ubuntu-latest' && env.CODACY_PROJECT_TOKEN != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        continue-on-error: true
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: lcov.info
+
       - name: Test all features
+        if: matrix.os != 'ubuntu-latest' || (env.CODECOV_TOKEN == '' && env.CODACY_PROJECT_TOKEN == '')
         run: cargo test --all-features --locked
 
   feature-matrix:
