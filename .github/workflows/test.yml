@@ -9,6 +9,9 @@ on:
       - main
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   stable:
     name: Stable test (${{ matrix.os }})
