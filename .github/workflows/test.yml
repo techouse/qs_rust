@@ -42,7 +42,7 @@ jobs:
 
       - name: Test all features with coverage
         if: matrix.os == 'ubuntu-latest' && (env.CODECOV_TOKEN != '' || env.CODACY_PROJECT_TOKEN != '')
-        run: cargo llvm-cov --all-features --locked --lcov --output-path lcov.info
+        run: cargo llvm-cov --all-features --locked --lib --tests --lcov --output-path lcov.info --ignore-filename-regex '(^|/)src/bin/'
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && env.CODECOV_TOKEN != ''

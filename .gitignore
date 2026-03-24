@@ -36,3 +36,6 @@ fuzz/target/
 fuzz/corpus/**/*
 !fuzz/corpus/**/
 !fuzz/corpus/**/*.json
+
+# Coverage
+lcov.info

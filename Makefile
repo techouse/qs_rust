@@ -8,8 +8,9 @@ RUSTDOCFLAGS_DOCS ?= -D warnings --cfg docsrs
 PACKAGE_LIST ?= /tmp/qs_rust-package-list.txt
 
 .PHONY: help build build-release clean fmt fmt-check clippy test test-all test-doc test-props \
-	feature-matrix quality node-bootstrap parity msrv package-list package-check docs docs-pages \
-	publish-dry-run ci release-check perf-compare perf-capture perf-cross-port fuzz-soak
+	coverage coverage-html feature-matrix quality node-bootstrap parity msrv package-list \
+	package-check docs docs-pages publish-dry-run ci release-check perf-compare perf-capture \
+	perf-cross-port fuzz-soak
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_.-]+:.*## / {printf "%-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
@@ -43,6 +44,12 @@ test-doc: ## Run documentation tests
 
 test-props: ## Run the proptest-backed test targets
 	$(CARGO) test --locked --test properties_decode --test properties_encode --test properties_roundtrip
+
+coverage: ## Generate the published-crate LCOV report used by CI (requires cargo-llvm-cov)
+	$(CARGO) llvm-cov --all-features --locked --lib --tests --lcov --output-path lcov.info --ignore-filename-regex '(^|/)src/bin/'
+
+coverage-html: ## Generate a published-crate HTML coverage report (requires cargo-llvm-cov)
+	$(CARGO) llvm-cov --all-features --locked --lib --tests --html --ignore-filename-regex '(^|/)src/bin/'
 
 feature-matrix: ## Run the feature-matrix checks from CI
 	$(CARGO) test --locked
