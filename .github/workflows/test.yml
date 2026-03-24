@@ -18,9 +18,8 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # TODO re-enable when making public so that we don't exhaust our GitHub Actions minutes on private repos
-          # - macos-latest
-          # - windows-latest
+          - macos-latest
+          - windows-latest
 
     steps:
       - uses: actions/checkout@v6
