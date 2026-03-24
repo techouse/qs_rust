@@ -1,0 +1,61 @@
+[package]
+authors = ["Klemen Tusar <techouse@gmail.com>"]
+name = "qs_rust"
+version = "1.0.0-rc.1"
+edition = "2024"
+rust-version = "1.88"
+description = "A query string encoding and decoding library for Rust. Ported from qs for JavaScript."
+license = "BSD-3-Clause"
+readme = "README.md"
+repository = "https://github.com/techouse/qs_rust"
+homepage = "https://techouse.github.io/qs_rust/"
+keywords = [
+    "qs", "codec", "url", "query", "querystring", "query-string",
+    "urlencode", "urldecode", "form-urlencoded", "percent-encoding",
+    "rfc3986", "arrays", "nested", "brackets"
+]
+categories = ["encoding", "parser-implementations", "web-programming"]
+exclude = [
+    ".github/**",
+    ".gitignore",
+    ".vscode/**",
+    "AGENTS.md",
+    "docs/**",
+    "fuzz/**",
+    "perf/**",
+    "pyproject.toml",
+    "scripts/**",
+    "src/**/tests/**",
+    "src/**/tests.rs",
+    "src/bin/**",
+    "tests/**",
+]
+
+[features]
+default = []
+serde = ["dep:serde", "dep:serde_json", "indexmap/serde"]
+chrono = ["dep:chrono"]
+time = ["dep:time"]
+
+[dependencies]
+chrono = { version = "0.4.42", optional = true, default-features = true }
+encoding_rs = "0.8.35"
+indexmap = "2.12.0"
+regex = "1.12.2"
+thiserror = "2.0.17"
+serde = { version = "1.0.228", features = ["derive"], optional = true }
+serde_json = { version = "1.0.145", optional = true, features = ["preserve_order"] }
+time = { version = "0.3.44", optional = true, features = ["formatting"] }
+
+[dev-dependencies]
+proptest = "1.9.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = { version = "1.0.145", features = ["preserve_order"] }
+
+[[example]]
+name = "serde_bridge"
+required-features = ["serde"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
