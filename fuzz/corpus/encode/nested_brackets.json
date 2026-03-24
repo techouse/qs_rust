@@ -1,0 +1,1 @@
+{"value":{"type":"object","entries":[{"key":"user","value":{"type":"object","entries":[{"key":"name","value":{"type":"string","value":"alice"}}]}},{"key":"tags","value":{"type":"array","items":[{"type":"string","value":"x"},{"type":"string","value":"y"}]}}]},"options":{"list_format":"brackets"}}

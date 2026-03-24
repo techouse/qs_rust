@@ -1,0 +1,1 @@
+{"pairs":[{"key":"a.b","value":{"type":"string","value":"3"}},{"key":"a[b]","value":{"type":"string","value":"4"}}],"options":{"allow_dots":true,"duplicates":"combine"}}

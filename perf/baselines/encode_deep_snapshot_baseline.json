@@ -1,0 +1,39 @@
+{
+  "captured_at": "2026-03-22T15:32:00.238485+00:00",
+  "command": [
+    "cargo",
+    "run",
+    "--release",
+    "--bin",
+    "qs_perf",
+    "--",
+    "--scenario",
+    "encode",
+    "--format",
+    "json",
+    "--warmups",
+    "5",
+    "--samples",
+    "7"
+  ],
+  "encode": [
+    {
+      "depth": 2000,
+      "iterations": 20,
+      "length": 6006,
+      "ms_per_op": 0.091379
+    },
+    {
+      "depth": 5000,
+      "iterations": 20,
+      "length": 15006,
+      "ms_per_op": 0.162456
+    },
+    {
+      "depth": 12000,
+      "iterations": 8,
+      "length": 36006,
+      "ms_per_op": 0.303136
+    }
+  ]
+}

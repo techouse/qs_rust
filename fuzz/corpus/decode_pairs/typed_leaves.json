@@ -1,0 +1,1 @@
+{"pairs":[{"key":"flag","value":{"type":"bool","value":true}},{"key":"count","value":{"type":"i64","value":42}},{"key":"bytes","value":{"type":"bytes","value":[104,105]}}],"options":{}}

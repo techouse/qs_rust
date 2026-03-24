@@ -1,0 +1,1 @@
+{"value":{"type":"object","entries":[{"key":"name.obj","value":{"type":"object","entries":[{"key":"first","value":{"type":"string","value":"John"}},{"key":"last","value":{"type":"string","value":"Doe"}}]}}]},"options":{"allow_dots":true,"encode_dot_in_keys":true,"add_query_prefix":true}}

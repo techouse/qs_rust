@@ -1,0 +1,1 @@
+{"value":{"type":"object","entries":[{"key":"items","value":{"type":"array","items":[]}},{"key":"z","value":{"type":"string","value":"last"}},{"key":"a","value":{"type":"string","value":"first"}}]},"options":{"allow_empty_lists":true,"sort_mode":"lexicographic_asc"}}

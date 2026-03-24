@@ -1,0 +1,53 @@
+{
+  "aggregator": "median",
+  "captured_at": "2026-03-23T09:03:35.235589+00:00",
+  "command": [
+    "cargo",
+    "run",
+    "--release",
+    "--bin",
+    "qs_perf",
+    "--",
+    "--scenario",
+    "decode",
+    "--format",
+    "json",
+    "--warmups",
+    "5",
+    "--samples",
+    "7"
+  ],
+  "decode": [
+    {
+      "comma": false,
+      "count": 100,
+      "iterations": 120,
+      "keys": 100,
+      "ms_per_op": 0.010447,
+      "name": "C1",
+      "utf8": false,
+      "value_len": 8
+    },
+    {
+      "comma": false,
+      "count": 1000,
+      "iterations": 16,
+      "keys": 1000,
+      "ms_per_op": 0.135781,
+      "name": "C2",
+      "utf8": false,
+      "value_len": 40
+    },
+    {
+      "comma": true,
+      "count": 1000,
+      "iterations": 16,
+      "keys": 1000,
+      "ms_per_op": 0.133013,
+      "name": "C3",
+      "utf8": true,
+      "value_len": 40
+    }
+  ],
+  "repetitions": 3
+}

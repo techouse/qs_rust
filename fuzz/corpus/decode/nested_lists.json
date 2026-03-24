@@ -1,0 +1,1 @@
+{"query":"user[name]=alice&tags[]=x&tags[]=y","options":{"allow_empty_lists":true}}

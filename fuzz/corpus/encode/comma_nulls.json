@@ -1,0 +1,1 @@
+{"value":{"type":"object","entries":[{"key":"a","value":{"type":"array","items":[{"type":"string","value":"x"},{"type":"null"},{"type":"string","value":"z"}]}}]},"options":{"list_format":"comma","strict_null_handling":true,"comma_compact_nulls":true}}

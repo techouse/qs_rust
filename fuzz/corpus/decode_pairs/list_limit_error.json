@@ -1,0 +1,1 @@
+{"pairs":[{"key":"a","value":{"type":"string","value":"1"}},{"key":"a","value":{"type":"string","value":"2"}},{"key":"a","value":{"type":"string","value":"3"}},{"key":"a","value":{"type":"string","value":"4"}}],"options":{"duplicates":"combine","list_limit":3,"throw_on_limit_exceeded":true}}
