@@ -75,11 +75,11 @@ msrv: ## Run all-feature tests on the crate MSRV (requires toolchain 1.88.0)
 	$(CARGO_MSRV) test --all-features --locked
 
 package-list: ## List files included in the published crate package
-	$(CARGO) package --locked --list > $(PACKAGE_LIST)
+	$(CARGO) package --locked --list --allow-dirty > $(PACKAGE_LIST)
 	@cat $(PACKAGE_LIST)
 
 package-check: ## Run the packaging checks used by CI
-	$(CARGO) package --locked --list > $(PACKAGE_LIST)
+	$(CARGO) package --locked --list --allow-dirty > $(PACKAGE_LIST)
 	! grep -E '^(fuzz/|tests/|scripts/|perf/|\.github/|\.vscode/|\.gitignore$$|AGENTS\.md|pyproject\.toml$$|src/bin/|src/.*/tests(/|\.rs$$))' $(PACKAGE_LIST)
 	$(CARGO) package --locked
 

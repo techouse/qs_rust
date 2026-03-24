@@ -16,15 +16,17 @@ keywords = [
 ]
 categories = ["encoding", "parser-implementations", "web-programming"]
 exclude = [
+    ".flake8",
     ".github/**",
     ".gitignore",
     ".vscode/**",
     "AGENTS.md",
     "CHANGELOG.md",
-    "CODE_OF_CONDUCT.md",
+    "CODE-OF-CONDUCT.md",
     "docs/**",
     "fuzz/**",
     "logo.png",
+    "Makefile",
     "perf/**",
     "pyproject.toml",
     "scripts/**",
