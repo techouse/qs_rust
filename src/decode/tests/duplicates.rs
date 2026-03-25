@@ -1,6 +1,6 @@
 use super::{
     DecodeOptions, Duplicates, Node, Value, combine_with_limit, decode, finalize_flat,
-    parse_query_string_values,
+    parse_query_string_values, stores_concrete_value, stores_parsed_value_with_compaction,
 };
 
 #[test]
@@ -114,7 +114,7 @@ fn combine_with_limit_skips_undefined_items_inside_overflow_appends() {
 fn duplicate_first_and_last_keep_concrete_values_when_possible() {
     let first_options = DecodeOptions::new().with_duplicates(Duplicates::First);
     let first = parse_query_string_values("a=1&a=2", &first_options).unwrap();
-    assert!(first.values.stores_concrete_value("a"));
+    assert!(stores_concrete_value(&first.values, "a"));
     assert_eq!(
         finalize_flat(first.values, &first_options)
             .unwrap()
@@ -124,7 +124,7 @@ fn duplicate_first_and_last_keep_concrete_values_when_possible() {
 
     let last_options = DecodeOptions::new().with_duplicates(Duplicates::Last);
     let last = parse_query_string_values("a=1&a=2", &last_options).unwrap();
-    assert!(last.values.stores_concrete_value("a"));
+    assert!(stores_concrete_value(&last.values, "a"));
     assert_eq!(
         finalize_flat(last.values, &last_options).unwrap().get("a"),
         Some(&Value::String("2".to_owned()))
@@ -136,14 +136,14 @@ fn duplicate_combine_keeps_flat_concrete_values_until_promotion_is_required() {
     let options = DecodeOptions::new().with_duplicates(Duplicates::Combine);
 
     let unique = parse_query_string_values("a=1", &options).unwrap();
-    assert!(unique.values.stores_concrete_value("a"));
+    assert!(stores_concrete_value(&unique.values, "a"));
     assert_eq!(
         finalize_flat(unique.values, &options).unwrap().get("a"),
         Some(&Value::String("1".to_owned()))
     );
 
     let combined = parse_query_string_values("a=1&a=2", &options).unwrap();
-    assert!(combined.values.stores_concrete_value("a"));
+    assert!(stores_concrete_value(&combined.values, "a"));
     assert_eq!(
         finalize_flat(combined.values, &options).unwrap().get("a"),
         Some(&Value::Array(vec![
@@ -160,7 +160,7 @@ fn duplicate_combine_keeps_concrete_array_scalar_mixes_under_limit_and_promotes_
         .with_comma(true)
         .with_list_limit(4);
     let combined = parse_query_string_values("a=1,2&a=3", &under_limit).unwrap();
-    assert!(combined.values.stores_concrete_value("a"));
+    assert!(stores_concrete_value(&combined.values, "a"));
     assert_eq!(
         finalize_flat(combined.values, &under_limit)
             .unwrap()
@@ -177,7 +177,7 @@ fn duplicate_combine_keeps_concrete_array_scalar_mixes_under_limit_and_promotes_
         .with_comma(true)
         .with_list_limit(2);
     let promoted = parse_query_string_values("a=1,2&a=3", &overflow).unwrap();
-    assert!(promoted.values.stores_parsed_value_with_compaction("a"));
+    assert!(stores_parsed_value_with_compaction(&promoted.values, "a"));
     assert_eq!(
         finalize_flat(promoted.values, &overflow).unwrap().get("a"),
         Some(&Value::Object(

@@ -11,6 +11,28 @@ pub(super) use crate::value::Value;
 pub(super) use indexmap::IndexMap;
 pub(super) use regex::Regex;
 
+pub(super) fn stores_concrete_value(values: &FlatValues, key: &str) -> bool {
+    matches!(values, FlatValues::Concrete(entries) if entries.contains_key(key))
+}
+
+pub(super) fn stores_parsed_value(values: &FlatValues, key: &str) -> bool {
+    matches!(values, FlatValues::Parsed(entries) if entries.contains_key(key))
+}
+
+pub(super) fn stores_parsed_value_with_compaction(values: &FlatValues, key: &str) -> bool {
+    matches!(
+        values,
+        FlatValues::Parsed(entries)
+            if matches!(
+                entries.get(key),
+                Some(ParsedFlatValue::Parsed {
+                    needs_compaction: true,
+                    ..
+                })
+            )
+    )
+}
+
 mod charset;
 mod duplicates;
 mod flat;

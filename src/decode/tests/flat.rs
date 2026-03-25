@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use super::{
     DecodeDecoder, DecodeOptions, Delimiter, FlatValues, IndexMap, Node, ParsedFlatValue, Regex,
     Value, collect_pair_values, decode, decode_from_pairs_map, finalize_flat,
-    parse_query_string_values, scan_structured_keys,
+    parse_query_string_values, scan_structured_keys, stores_concrete_value, stores_parsed_value,
 };
 use crate::options::DecodeKind;
 
@@ -115,14 +115,14 @@ fn finalize_flat_preserves_concrete_nested_containers() {
 #[test]
 fn flat_parse_marks_concrete_scalars_and_comma_arrays_as_clean() {
     let scalar = parse_query_string_values("a=1", &DecodeOptions::new()).unwrap();
-    assert!(scalar.values.stores_concrete_value("a"));
+    assert!(stores_concrete_value(&scalar.values, "a"));
 
     let comma =
         parse_query_string_values("a=1,2,3", &DecodeOptions::new().with_comma(true)).unwrap();
-    assert!(comma.values.stores_concrete_value("a"));
+    assert!(stores_concrete_value(&comma.values, "a"));
 
     let duplicates = parse_query_string_values("a=1&a=2", &DecodeOptions::new()).unwrap();
-    assert!(duplicates.values.stores_concrete_value("a"));
+    assert!(stores_concrete_value(&duplicates.values, "a"));
 }
 
 #[test]
@@ -161,7 +161,7 @@ fn finalize_flat_compacts_only_marked_values() {
 fn structured_fallback_converts_concrete_flat_entries_when_needed() {
     let options = DecodeOptions::new();
     let parsed = parse_query_string_values("a=1&b[c]=2", &options).unwrap();
-    assert!(parsed.values.stores_concrete_value("a"));
+    assert!(stores_concrete_value(&parsed.values, "a"));
 
     let scan = scan_structured_keys(parsed.values.key_refs(), &options).unwrap();
     let full = decode_from_pairs_map(parsed.values, &options, &scan).unwrap();
@@ -184,19 +184,19 @@ fn regex_custom_and_decode_pairs_keep_the_parsed_path() {
     let regex_options =
         DecodeOptions::new().with_delimiter(Delimiter::Regex(Regex::new("[&;]").unwrap()));
     let regex_parsed = parse_query_string_values("a=1;b=2", &regex_options).unwrap();
-    assert!(regex_parsed.values.stores_parsed_value("a"));
+    assert!(stores_parsed_value(&regex_parsed.values, "a"));
 
     let custom_options =
         DecodeOptions::new().with_decoder(Some(DecodeDecoder::new(|input, _, _| input.to_owned())));
     let custom_parsed = parse_query_string_values("a=1", &custom_options).unwrap();
-    assert!(custom_parsed.values.stores_parsed_value("a"));
+    assert!(stores_parsed_value(&custom_parsed.values, "a"));
 
     let pair_parsed = collect_pair_values(
         [("a".to_owned(), Value::String("1".to_owned()))],
         &DecodeOptions::new(),
     )
     .unwrap();
-    assert!(pair_parsed.values.stores_parsed_value("a"));
+    assert!(stores_parsed_value(&pair_parsed.values, "a"));
 }
 
 #[test]

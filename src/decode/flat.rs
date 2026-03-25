@@ -122,17 +122,6 @@ impl ParsedFlatValue {
             Self::Parsed { node, .. } => node_list_length_for_combine(node),
         }
     }
-
-    #[cfg(test)]
-    pub(super) fn is_parsed_with_compaction(&self) -> bool {
-        matches!(
-            self,
-            Self::Parsed {
-                needs_compaction: true,
-                ..
-            }
-        )
-    }
 }
 
 /// The flat key/value map produced by the scan stage.
@@ -195,27 +184,6 @@ impl FlatValues {
                 .collect(),
             Self::Parsed(entries) => entries,
         }
-    }
-
-    #[cfg(test)]
-    pub(super) fn stores_concrete_value(&self, key: &str) -> bool {
-        matches!(self, Self::Concrete(entries) if entries.contains_key(key))
-    }
-
-    #[cfg(test)]
-    pub(super) fn stores_parsed_value_with_compaction(&self, key: &str) -> bool {
-        matches!(
-            self,
-            Self::Parsed(entries)
-                if entries
-                    .get(key)
-                    .is_some_and(ParsedFlatValue::is_parsed_with_compaction)
-        )
-    }
-
-    #[cfg(test)]
-    pub(super) fn stores_parsed_value(&self, key: &str) -> bool {
-        matches!(self, Self::Parsed(entries) if entries.contains_key(key))
     }
 }
 
