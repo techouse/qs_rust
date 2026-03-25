@@ -10,9 +10,11 @@ readme = "README.md"
 repository = "https://github.com/techouse/qs_rust"
 homepage = "https://techouse.github.io/qs_rust/"
 keywords = [
-    "qs", "codec", "url", "query", "querystring", "query-string",
-    "urlencode", "urldecode", "form-urlencoded", "percent-encoding",
-    "rfc3986", "arrays", "nested", "brackets"
+    "qs",
+    "query-string",
+    "urlencode",
+    "urldecode",
+    "percent-encoding",
 ]
 categories = ["encoding", "parser-implementations", "web-programming"]
 exclude = [
