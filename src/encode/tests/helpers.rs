@@ -2,8 +2,9 @@ use std::sync::{Arc, Mutex};
 
 use super::{
     Charset, EncodeOptions, EncodeToken, EncodeTokenEncoder, Format, Ordering, Sorter, Value,
-    encode, encode_comma_array, encode_key_only_fragment, encoded_dot_escape,
-    escape_dots_in_materialized_path, percent_encode_bytes, percent_encode_latin1,
+    WhitelistSelector, encode, encode_comma_array, encode_comma_array_controlled,
+    encode_key_only_fragment, encoded_dot_escape, escape_dots_in_materialized_path,
+    percent_encode_bytes, percent_encode_latin1,
 };
 use crate::options::ListFormat;
 
@@ -66,6 +67,165 @@ fn comma_compact_nulls_drops_null_entries_and_omits_all_null_keys() {
     )
     .unwrap();
     assert_eq!(all_null, "");
+}
+
+#[test]
+fn comma_arrays_emit_empty_list_suffixes_only_when_allowed() {
+    let path = super::KeyPathNode::from_raw("letters");
+    let base = EncodeOptions::new()
+        .with_encode(false)
+        .with_list_format(ListFormat::Comma);
+
+    assert_eq!(encode_comma_array(&[], &path, &base), Vec::<String>::new());
+    assert_eq!(
+        encode_comma_array(&[], &path, &base.clone().with_allow_empty_lists(true)),
+        vec!["letters[]".to_owned()]
+    );
+}
+
+#[test]
+fn comma_arrays_emit_key_only_fragments_for_skipped_nulls() {
+    let path = super::KeyPathNode::from_raw("letters");
+    let base = EncodeOptions::new()
+        .with_encode(false)
+        .with_list_format(ListFormat::Comma)
+        .with_skip_nulls(true)
+        .with_strict_null_handling(true);
+
+    assert_eq!(
+        encode_comma_array(&[Value::Null, Value::Null], &path, &base),
+        vec!["letters".to_owned()]
+    );
+    assert_eq!(
+        encode_comma_array(
+            &[Value::Null],
+            &path,
+            &base.clone().with_comma_round_trip(true),
+        ),
+        vec!["letters[]".to_owned()]
+    );
+}
+
+#[test]
+fn comma_arrays_round_trip_single_non_null_values_with_suffixes() {
+    let path = super::KeyPathNode::from_raw("letters");
+    let parts = encode_comma_array(
+        &[Value::String("solo".to_owned())],
+        &path,
+        &EncodeOptions::new()
+            .with_encode(false)
+            .with_list_format(ListFormat::Comma)
+            .with_comma_round_trip(true),
+    );
+
+    assert_eq!(parts, vec!["letters[]=solo".to_owned()]);
+}
+
+#[test]
+fn controlled_comma_arrays_cover_empty_inputs_and_out_of_range_whitelists() {
+    let path = super::KeyPathNode::from_raw("letters");
+    let base = EncodeOptions::new()
+        .with_encode(false)
+        .with_list_format(ListFormat::Comma);
+
+    assert_eq!(
+        encode_comma_array_controlled(&[], &path, &base),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        encode_comma_array_controlled(&[], &path, &base.clone().with_allow_empty_lists(true)),
+        vec!["letters[]".to_owned()]
+    );
+    assert_eq!(
+        encode_comma_array_controlled(
+            &[Value::String("kept".to_owned())],
+            &path,
+            &base
+                .clone()
+                .with_whitelist(Some(vec![WhitelistSelector::Index(4)])),
+        ),
+        Vec::<String>::new()
+    );
+}
+
+#[test]
+fn controlled_comma_arrays_can_compact_or_strictify_nulls() {
+    let path = super::KeyPathNode::from_raw("letters");
+    let items = [Value::Null];
+    let base = EncodeOptions::new()
+        .with_encode(false)
+        .with_list_format(ListFormat::Comma)
+        .with_whitelist(Some(vec![WhitelistSelector::Index(0)]));
+
+    assert_eq!(
+        encode_comma_array_controlled(&items, &path, &base.clone().with_comma_compact_nulls(true),),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        encode_comma_array_controlled(
+            &items,
+            &path,
+            &base
+                .clone()
+                .with_skip_nulls(true)
+                .with_strict_null_handling(true)
+                .with_comma_round_trip(true),
+        ),
+        vec!["letters[]".to_owned()]
+    );
+}
+
+#[test]
+fn controlled_comma_arrays_join_selected_values_after_filtering() {
+    let path = super::KeyPathNode::from_raw("letters");
+    let items = [
+        Value::String("a b".to_owned()),
+        Value::String("ignored".to_owned()),
+    ];
+    let options = EncodeOptions::new()
+        .with_encode(false)
+        .with_list_format(ListFormat::Comma)
+        .with_comma_round_trip(true)
+        .with_whitelist(Some(vec![
+            WhitelistSelector::Index(4),
+            WhitelistSelector::Index(0),
+        ]));
+
+    assert_eq!(
+        encode_comma_array_controlled(&items, &path, &options),
+        vec!["letters[]=a b".to_owned()]
+    );
+}
+
+#[test]
+fn controlled_comma_arrays_encode_selected_values_only_with_custom_tokens() {
+    let path = super::KeyPathNode::from_raw("letters");
+    let seen = Arc::new(Mutex::new(Vec::new()));
+    let capture = Arc::clone(&seen);
+    let parts = encode_comma_array_controlled(
+        &[Value::String("a b".to_owned())],
+        &path,
+        &EncodeOptions::new()
+            .with_encode(false)
+            .with_list_format(ListFormat::Comma)
+            .with_encode_values_only(true)
+            .with_comma_round_trip(true)
+            .with_encoder(Some(EncodeTokenEncoder::new(move |token, _, _| {
+                capture.lock().unwrap().push(describe_token(token));
+                match token {
+                    EncodeToken::Value(Value::String(text)) => format!("<{text}>"),
+                    EncodeToken::Key(_) | EncodeToken::TextValue(_) | EncodeToken::Value(_) => {
+                        "unexpected".to_owned()
+                    }
+                }
+            }))),
+    );
+
+    assert_eq!(parts, vec!["letters[]=<a b>".to_owned()]);
+    assert_eq!(
+        *seen.lock().unwrap(),
+        vec!["value:String(\"a b\")".to_owned()]
+    );
 }
 
 #[test]

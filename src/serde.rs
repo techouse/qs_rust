@@ -1317,11 +1317,14 @@ fn de_error(message: impl fmt::Display) -> serde_json::Error {
 #[cfg(test)]
 mod tests {
     use super::{
-        MapKeySerializer, TEMPORAL_MARKER_NAME, TemporalCaptureSerializer, ValueMapAccess,
-        ValueMapSerializer, ValueSerializer, from_str, from_value, to_string, to_value,
+        MapKeySerializer, TEMPORAL_MARKER_NAME, TemporalCaptureSerializer, ValueDeserializer,
+        ValueEnumAccess, ValueMapAccess, ValueMapSerializer, ValueSeqAccess, ValueSerializer,
+        from_str, from_value, to_string, to_value,
     };
     use crate::{DateTimeValue, DecodeOptions, EncodeOptions, TemporalValue, Value};
-    use serde::de::{DeserializeSeed, IgnoredAny, Visitor};
+    use serde::de::{
+        DeserializeSeed, EnumAccess, IgnoredAny, MapAccess, SeqAccess, VariantAccess, Visitor,
+    };
     use serde::{Deserialize, Serialize, de, ser};
     use std::collections::BTreeMap;
     use std::fmt;
@@ -1355,6 +1358,66 @@ mod tests {
             D: de::Deserializer<'de>,
         {
             u32::deserialize(deserializer)
+        }
+    }
+
+    struct StringSeed;
+
+    impl<'de> DeserializeSeed<'de> for StringSeed {
+        type Value = String;
+
+        fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            String::deserialize(deserializer)
+        }
+    }
+
+    struct AnySummaryVisitor;
+
+    impl<'de> Visitor<'de> for AnySummaryVisitor {
+        type Value = String;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            formatter.write_str("any qs value")
+        }
+
+        fn visit_unit<E>(self) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok("unit".to_owned())
+        }
+
+        fn visit_byte_buf<E>(self, value: Vec<u8>) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(format!("bytes:{value:?}"))
+        }
+
+        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: de::SeqAccess<'de>,
+        {
+            let mut len = 0usize;
+            while seq.next_element::<IgnoredAny>()?.is_some() {
+                len += 1;
+            }
+            Ok(format!("seq:{len}"))
+        }
+
+        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+        where
+            A: de::MapAccess<'de>,
+        {
+            let mut keys = Vec::new();
+            while let Some(key) = map.next_key::<String>()? {
+                let _: IgnoredAny = map.next_value()?;
+                keys.push(key);
+            }
+            Ok(format!("map:{}", keys.join(",")))
         }
     }
 
@@ -1781,6 +1844,269 @@ mod tests {
     }
 
     #[test]
+    fn internal_temporal_capture_serializer_rejects_remaining_scalar_and_container_shapes() {
+        macro_rules! assert_temporal_error {
+            ($($expr:expr),+ $(,)?) => {
+                $(
+                    assert_json_error($expr, "temporal markers must serialize as ISO strings");
+                )+
+            };
+        }
+
+        assert_temporal_error!(
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_i8(
+                TemporalCaptureSerializer,
+                -8,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_i16(
+                TemporalCaptureSerializer,
+                -16,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_i32(
+                TemporalCaptureSerializer,
+                -32,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_u8(
+                TemporalCaptureSerializer,
+                8,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_u16(
+                TemporalCaptureSerializer,
+                16,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_u32(
+                TemporalCaptureSerializer,
+                32,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_u64(
+                TemporalCaptureSerializer,
+                64,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_f32(
+                TemporalCaptureSerializer,
+                1.25,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_f64(
+                TemporalCaptureSerializer,
+                2.5,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_char(
+                TemporalCaptureSerializer,
+                'x',
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_some(
+                TemporalCaptureSerializer,
+                &"wrapped",
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_unit_struct(
+                TemporalCaptureSerializer,
+                "UnitStruct",
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_unit_variant(
+                TemporalCaptureSerializer,
+                "Variant",
+                0,
+                "Unit",
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_newtype_struct(
+                TemporalCaptureSerializer,
+                "Wrapper",
+                &"wrapped",
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_newtype_variant(
+                TemporalCaptureSerializer,
+                "Variant",
+                0,
+                "Newtype",
+                &"wrapped",
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_tuple(
+                TemporalCaptureSerializer,
+                2,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_tuple_struct(
+                TemporalCaptureSerializer,
+                "TupleStruct",
+                2,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_tuple_variant(
+                TemporalCaptureSerializer,
+                "Variant",
+                0,
+                "Tuple",
+                2,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_struct(
+                TemporalCaptureSerializer,
+                "Struct",
+                1,
+            ),
+            <TemporalCaptureSerializer as ser::Serializer>::serialize_struct_variant(
+                TemporalCaptureSerializer,
+                "Variant",
+                0,
+                "Struct",
+                1,
+            )
+        );
+    }
+
+    #[test]
+    fn internal_scalar_serializers_cover_small_numeric_and_optional_paths() {
+        assert_eq!(
+            <ValueSerializer as ser::Serializer>::serialize_i8(ValueSerializer, -8).unwrap(),
+            Value::I64(-8)
+        );
+        assert_eq!(
+            <ValueSerializer as ser::Serializer>::serialize_i16(ValueSerializer, -16).unwrap(),
+            Value::I64(-16)
+        );
+        assert_eq!(
+            <ValueSerializer as ser::Serializer>::serialize_i64(ValueSerializer, -64).unwrap(),
+            Value::I64(-64)
+        );
+        assert_eq!(
+            <ValueSerializer as ser::Serializer>::serialize_u16(ValueSerializer, 16).unwrap(),
+            Value::U64(16)
+        );
+        assert_eq!(
+            <ValueSerializer as ser::Serializer>::serialize_u64(ValueSerializer, 64).unwrap(),
+            Value::U64(64)
+        );
+        assert_eq!(
+            <ValueSerializer as ser::Serializer>::serialize_f32(ValueSerializer, 1.25).unwrap(),
+            Value::F64(1.25)
+        );
+        assert_eq!(
+            <ValueSerializer as ser::Serializer>::serialize_some(ValueSerializer, &7u8).unwrap(),
+            Value::U64(7)
+        );
+        assert_eq!(
+            <ValueSerializer as ser::Serializer>::serialize_newtype_struct(
+                ValueSerializer,
+                "Wrapper",
+                &7u8,
+            )
+            .unwrap(),
+            Value::U64(7)
+        );
+
+        assert_eq!(
+            <MapKeySerializer as ser::Serializer>::serialize_i8(MapKeySerializer, -8).unwrap(),
+            "-8".to_owned()
+        );
+        assert_eq!(
+            <MapKeySerializer as ser::Serializer>::serialize_i16(MapKeySerializer, -16).unwrap(),
+            "-16".to_owned()
+        );
+        assert_eq!(
+            <MapKeySerializer as ser::Serializer>::serialize_u16(MapKeySerializer, 16).unwrap(),
+            "16".to_owned()
+        );
+        assert_eq!(
+            <MapKeySerializer as ser::Serializer>::serialize_u32(MapKeySerializer, 32).unwrap(),
+            "32".to_owned()
+        );
+        assert_eq!(
+            <MapKeySerializer as ser::Serializer>::serialize_f32(MapKeySerializer, 1.25).unwrap(),
+            "1.25".to_owned()
+        );
+        assert_eq!(
+            <MapKeySerializer as ser::Serializer>::serialize_some(MapKeySerializer, &7u8).unwrap(),
+            "7".to_owned()
+        );
+    }
+
+    #[test]
+    fn internal_deserializers_cover_any_seq_map_and_unit_struct_paths() {
+        #[derive(Debug, PartialEq, Deserialize)]
+        struct UnitStruct;
+
+        let array = Value::Array(vec![Value::U64(1), Value::U64(2)]);
+        let bytes = Value::Bytes(vec![1, 2]);
+        let object =
+            Value::Object([("field".to_owned(), Value::String("value".to_owned()))].into());
+
+        assert_eq!(
+            de::Deserializer::deserialize_any(
+                ValueDeserializer::new(&Value::Null),
+                AnySummaryVisitor
+            )
+            .unwrap(),
+            "unit"
+        );
+        assert_eq!(
+            de::Deserializer::deserialize_any(ValueDeserializer::new(&array), AnySummaryVisitor)
+                .unwrap(),
+            "seq:2"
+        );
+        assert_eq!(
+            de::Deserializer::deserialize_any(ValueDeserializer::new(&bytes), AnySummaryVisitor)
+                .unwrap(),
+            "bytes:[1, 2]"
+        );
+        assert_eq!(
+            de::Deserializer::deserialize_any(ValueDeserializer::new(&object), AnySummaryVisitor)
+                .unwrap(),
+            "map:field"
+        );
+        assert_eq!(from_value::<UnitStruct>(&Value::Null).unwrap(), UnitStruct);
+
+        let value_items = [Value::U64(7)];
+        let mut value_access = ValueSeqAccess::from_values(&value_items);
+        assert_eq!(
+            SeqAccess::next_element_seed(&mut value_access, U32Seed).unwrap(),
+            Some(7)
+        );
+        assert_eq!(
+            SeqAccess::next_element_seed(&mut value_access, U32Seed).unwrap(),
+            None
+        );
+
+        let byte_items = [9u8];
+        let mut byte_access = ValueSeqAccess::from_bytes(&byte_items);
+        assert_eq!(
+            SeqAccess::next_element_seed(&mut byte_access, U32Seed).unwrap(),
+            Some(9)
+        );
+        assert_eq!(
+            SeqAccess::next_element_seed(&mut byte_access, U32Seed).unwrap(),
+            None
+        );
+
+        let entries = [("answer".to_owned(), Value::U64(42))].into();
+        let mut map_access = ValueMapAccess::new(&entries);
+        assert_eq!(
+            MapAccess::next_key_seed(&mut map_access, StringSeed).unwrap(),
+            Some("answer".to_owned())
+        );
+        assert_eq!(
+            MapAccess::next_value_seed(&mut map_access, U32Seed).unwrap(),
+            42
+        );
+        assert_eq!(
+            MapAccess::next_key_seed(&mut map_access, StringSeed).unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn internal_enum_accessors_cover_owned_and_borrowed_unit_variants() {
+        let (borrowed_name, borrowed_variant) =
+            EnumAccess::variant_seed(ValueEnumAccess::unit("Unit"), StringSeed).unwrap();
+        assert_eq!(borrowed_name, "Unit".to_owned());
+        VariantAccess::unit_variant(borrowed_variant).unwrap();
+
+        let (owned_name, owned_variant) = EnumAccess::variant_seed(
+            ValueEnumAccess::owned_unit("Snapshot".to_owned()),
+            StringSeed,
+        )
+        .unwrap();
+        assert_eq!(owned_name, "Snapshot".to_owned());
+        VariantAccess::unit_variant(owned_variant).unwrap();
+    }
+
+    #[test]
     fn internal_serializers_cover_marker_bytes_keys_and_error_paths() {
         #[derive(Debug)]
         struct MarkedTemporal;
@@ -2023,6 +2349,49 @@ mod tests {
 
     #[cfg(feature = "chrono")]
     #[test]
+    fn chrono_naive_temporal_field_helpers_round_trip_directly() {
+        let naive = chrono::NaiveDate::from_ymd_opt(2024, 1, 2)
+            .unwrap()
+            .and_hms_opt(3, 4, 5)
+            .unwrap();
+
+        #[derive(Debug, PartialEq, Deserialize, Serialize)]
+        struct Query {
+            #[serde(with = "crate::serde::temporal::chrono_naive_datetime")]
+            at: chrono::NaiveDateTime,
+        }
+
+        let query = Query { at: naive };
+        let value = to_value(&query).unwrap();
+        assert_eq!(
+            value,
+            Value::Object(
+                [(
+                    "at".to_owned(),
+                    Value::Temporal(TemporalValue::from(query.at))
+                )]
+                .into()
+            )
+        );
+
+        let decoded: Query = from_value(&value).unwrap();
+        assert_eq!(decoded, query);
+        assert_eq!(
+            crate::serde::temporal::chrono_naive_datetime::serialize(&naive, ValueSerializer)
+                .unwrap(),
+            Value::Temporal(TemporalValue::from(naive))
+        );
+        assert_eq!(
+            crate::serde::temporal::chrono_naive_datetime::deserialize(ValueDeserializer::new(
+                &Value::Temporal(TemporalValue::from(naive)),
+            ))
+            .unwrap(),
+            naive
+        );
+    }
+
+    #[cfg(feature = "chrono")]
+    #[test]
     fn chrono_temporal_field_helpers_preserve_temporal_leaves() {
         use chrono::{FixedOffset, TimeZone};
 
@@ -2156,6 +2525,51 @@ mod tests {
 
         let decoded: Outer = from_value(&value).unwrap();
         assert_eq!(decoded, query);
+    }
+
+    #[cfg(feature = "time")]
+    #[test]
+    fn time_primitive_temporal_field_helpers_round_trip_directly() {
+        use time::{Date, Month};
+
+        let primitive = Date::from_calendar_date(2024, Month::January, 2)
+            .unwrap()
+            .with_hms(3, 4, 5)
+            .unwrap();
+
+        #[derive(Debug, PartialEq, Deserialize, Serialize)]
+        struct Query {
+            #[serde(with = "crate::serde::temporal::time_primitive_datetime")]
+            at: time::PrimitiveDateTime,
+        }
+
+        let query = Query { at: primitive };
+        let value = to_value(&query).unwrap();
+        assert_eq!(
+            value,
+            Value::Object(
+                [(
+                    "at".to_owned(),
+                    Value::Temporal(TemporalValue::from(query.at))
+                )]
+                .into()
+            )
+        );
+
+        let decoded: Query = from_value(&value).unwrap();
+        assert_eq!(decoded, query);
+        assert_eq!(
+            crate::serde::temporal::time_primitive_datetime::serialize(&primitive, ValueSerializer)
+                .unwrap(),
+            Value::Temporal(TemporalValue::from(primitive))
+        );
+        assert_eq!(
+            crate::serde::temporal::time_primitive_datetime::deserialize(ValueDeserializer::new(
+                &Value::Temporal(TemporalValue::from(primitive)),
+            ))
+            .unwrap(),
+            primitive
+        );
     }
 
     #[cfg(feature = "time")]

@@ -1,3 +1,4 @@
+pub(super) use super::comma::encode_comma_array_controlled;
 pub(super) use super::{
     encode, encode_comma_array, encode_key_only_fragment, encoded_dot_escape, percent_encode_bytes,
     percent_encode_latin1, try_encode_linear_map_chain,

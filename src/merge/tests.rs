@@ -250,4 +250,224 @@ fn merge_helpers_recognize_map_like_arrays_and_extract_entries() {
         overflow_entries.into_iter().collect::<Vec<_>>(),
         vec![("1".to_owned(), scalar("value"))]
     );
+
+    assert!(map_entries(Node::Undefined).is_empty());
+}
+
+#[test]
+fn merge_arrays_with_holes_append_scalar_sources_before_sparse_fallback() {
+    let merged = merge(
+        Node::Array(vec![Node::Undefined]),
+        scalar("value"),
+        &DecodeOptions::new(),
+    )
+    .unwrap();
+
+    assert_eq!(merged, Node::Array(vec![Node::Undefined, scalar("value")]));
+}
+
+#[test]
+fn merge_object_targets_ignore_undefined_sources() {
+    let target = Node::Object([("field".to_owned(), scalar("value"))].into());
+
+    let merged = merge(target.clone(), Node::Undefined, &DecodeOptions::new()).unwrap();
+    assert_eq!(merged, target);
+}
+
+#[test]
+fn merge_overflow_targets_ignore_undefined_sources() {
+    let target = Node::OverflowObject {
+        entries: [("2".to_owned(), scalar("value"))].into(),
+        max_index: 2,
+    };
+
+    let merged = merge(target.clone(), Node::Undefined, &DecodeOptions::new()).unwrap();
+    assert_eq!(merged, target);
+}
+
+#[test]
+fn merge_scalar_targets_prepend_non_undefined_array_items() {
+    let merged = merge(
+        scalar("root"),
+        Node::Array(vec![Node::Undefined, scalar("leaf")]),
+        &DecodeOptions::new(),
+    )
+    .unwrap();
+
+    assert_eq!(merged, Node::Array(vec![scalar("root"), scalar("leaf")]));
+}
+
+#[test]
+fn merge_overflow_objects_with_plain_objects_track_max_indices_and_collisions() {
+    let merged = merge(
+        Node::OverflowObject {
+            entries: [
+                (
+                    "0".to_owned(),
+                    Node::Object([("left".to_owned(), scalar("a"))].into()),
+                ),
+                ("legacy".to_owned(), scalar("stale")),
+            ]
+            .into(),
+            max_index: 0,
+        },
+        Node::Object(
+            [
+                ("1".to_owned(), scalar("b")),
+                ("010".to_owned(), scalar("zero-ten")),
+                (
+                    "0".to_owned(),
+                    Node::Object([("right".to_owned(), scalar("c"))].into()),
+                ),
+            ]
+            .into(),
+        ),
+        &DecodeOptions::new(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::OverflowObject {
+            entries: [
+                (
+                    "0".to_owned(),
+                    Node::Object(
+                        [
+                            ("left".to_owned(), scalar("a")),
+                            ("right".to_owned(), scalar("c")),
+                        ]
+                        .into(),
+                    ),
+                ),
+                ("legacy".to_owned(), scalar("stale")),
+                ("1".to_owned(), scalar("b")),
+                ("010".to_owned(), scalar("zero-ten")),
+            ]
+            .into(),
+            max_index: 1,
+        }
+    );
+}
+
+#[test]
+fn merge_overflow_objects_preserve_noncanonical_keys_from_other_overflows() {
+    let merged = merge(
+        Node::OverflowObject {
+            entries: [("0".to_owned(), scalar("a"))].into(),
+            max_index: 0,
+        },
+        Node::OverflowObject {
+            entries: [
+                ("5".to_owned(), scalar("b")),
+                ("05".to_owned(), scalar("c")),
+            ]
+            .into(),
+            max_index: 5,
+        },
+        &DecodeOptions::new(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::OverflowObject {
+            entries: [
+                ("0".to_owned(), scalar("a")),
+                ("5".to_owned(), scalar("b")),
+                ("05".to_owned(), scalar("c")),
+            ]
+            .into(),
+            max_index: 5,
+        }
+    );
+}
+
+#[test]
+fn merge_array_targets_promote_to_objects_for_plain_map_sources() {
+    let merged = merge(
+        Node::Array(vec![scalar("a")]),
+        Node::Object([("field".to_owned(), scalar("b"))].into()),
+        &DecodeOptions::new(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::Object(
+            [
+                ("0".to_owned(), scalar("a")),
+                ("field".to_owned(), scalar("b")),
+            ]
+            .into()
+        )
+    );
+}
+
+#[test]
+fn merge_empty_array_targets_keep_overflow_metadata_when_sources_are_overflow_maps() {
+    let merged = merge(
+        Node::Array(Vec::new()),
+        Node::OverflowObject {
+            entries: [("2".to_owned(), scalar("c"))].into(),
+            max_index: 2,
+        },
+        &DecodeOptions::new(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::OverflowObject {
+            entries: [("2".to_owned(), scalar("c"))].into(),
+            max_index: 2,
+        }
+    );
+}
+
+#[test]
+fn merge_map_like_arrays_append_new_items_after_skipping_undefined_entries() {
+    let merged = merge(
+        Node::Array(vec![Node::Object(
+            [("left".to_owned(), scalar("a"))].into(),
+        )]),
+        Node::Array(vec![
+            Node::Undefined,
+            Node::Object([("right".to_owned(), scalar("b"))].into()),
+        ]),
+        &DecodeOptions::new(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::Array(vec![
+            Node::Object([("left".to_owned(), scalar("a"))].into()),
+            Node::Object([("right".to_owned(), scalar("b"))].into()),
+        ])
+    );
+}
+
+#[test]
+fn merge_map_like_arrays_can_fall_back_to_numeric_objects_when_holes_remain() {
+    let merged = merge(
+        Node::Array(vec![
+            Node::Object([("left".to_owned(), scalar("a"))].into()),
+            Node::Undefined,
+        ]),
+        Node::Array(vec![Node::Undefined]),
+        &DecodeOptions::new().with_parse_lists(false),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::Object(
+            [(
+                "0".to_owned(),
+                Node::Object([("left".to_owned(), scalar("a"))].into()),
+            )]
+            .into()
+        )
+    );
 }
