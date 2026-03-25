@@ -6,10 +6,10 @@ A query string encoding and decoding library for Rust.
 
 Ported from [qs](https://www.npmjs.com/package/qs) for JavaScript.
 
-![Crates.io Version](https://img.shields.io/crates/v/qs_rust)
-![Crates.io MSRV](https://img.shields.io/crates/msrv/qs_rust)
-![Crates.io Size](https://img.shields.io/crates/size/qs_rust)
-![Crates.io Downloads (recent)](https://img.shields.io/crates/dr/qs_rust)
+[![Crates.io Version](https://img.shields.io/crates/v/qs_rust)](https://crates.io/crates/qs_rust)
+[![Crates.io MSRV](https://img.shields.io/crates/msrv/qs_rust)](https://crates.io/crates/qs_rust)
+[![Crates.io Size](https://img.shields.io/crates/size/qs_rust)](https://crates.io/crates/qs_rust)
+[![Crates.io Downloads (recent)](https://img.shields.io/crates/dr/qs_rust)](https://crates.io/crates/qs_rust)
 [![Test](https://github.com/techouse/qs_rust/actions/workflows/test.yml/badge.svg)](https://github.com/techouse/qs_rust/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/techouse/qs_rust/graph/badge.svg?token=DHq7RZTFAn)](https://codecov.io/gh/techouse/qs_rust)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/51927280c1814424b844cad1eec67180)](https://app.codacy.com/gh/techouse/qs_rust/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
