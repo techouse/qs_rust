@@ -30,6 +30,32 @@ fn merge_overflow_object_into_primitive_shifts_indices() {
 }
 
 #[test]
+fn merge_scalar_targets_shift_canonical_overflow_keys_but_preserve_noncanonical_ones() {
+    let overflow = Node::OverflowObject {
+        entries: [
+            ("0".to_owned(), scalar("b")),
+            ("01".to_owned(), scalar("legacy")),
+        ]
+        .into(),
+        max_index: 1,
+    };
+
+    let merged = merge(scalar("a"), overflow, &DecodeOptions::new()).unwrap();
+    assert_eq!(
+        merged,
+        Node::OverflowObject {
+            entries: [
+                ("0".to_owned(), scalar("a")),
+                ("1".to_owned(), scalar("b")),
+                ("01".to_owned(), scalar("legacy")),
+            ]
+            .into(),
+            max_index: 2,
+        }
+    );
+}
+
+#[test]
 fn merge_overflow_preserves_noncanonical_keys_without_advancing_max_index() {
     let target = Node::Object([("010".to_owned(), scalar("x"))].into());
     let overflow = Node::OverflowObject {
@@ -451,11 +477,10 @@ fn merge_map_like_arrays_append_new_items_after_skipping_undefined_entries() {
 #[test]
 fn merge_map_like_arrays_can_fall_back_to_numeric_objects_when_holes_remain() {
     let merged = merge(
-        Node::Array(vec![
-            Node::Object([("left".to_owned(), scalar("a"))].into()),
-            Node::Undefined,
-        ]),
-        Node::Array(vec![Node::Undefined]),
+        Node::Array(vec![Node::Object(
+            [("left".to_owned(), scalar("a"))].into(),
+        )]),
+        Node::Array(vec![Node::Undefined, Node::Undefined]),
         &DecodeOptions::new().with_parse_lists(false),
     )
     .unwrap();
@@ -465,7 +490,7 @@ fn merge_map_like_arrays_can_fall_back_to_numeric_objects_when_holes_remain() {
         Node::Object(
             [(
                 "0".to_owned(),
-                Node::Object([("left".to_owned(), scalar("a"))].into()),
+                Node::Object([("left".to_owned(), scalar("a"))].into())
             )]
             .into()
         )
