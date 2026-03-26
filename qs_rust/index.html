@@ -1,0 +1,651 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="qs_rust"><title>qs_rust - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-77263533.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="qs_rust" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0 (4a4ef493e 2026-03-02)" data-channel="1.94.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate qs_rust</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../qs_rust/index.html">qs_rust</a><span class="version">1.0.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#qs_rust" title="qs_rust">qs_rust</a><ul><li><a href="#highlights" title="Highlights">Highlights</a></li><li><a href="#installation" title="Installation">Installation</a></li><li><a href="#quick-start" title="Quick Start">Quick Start</a></li><li><a href="#decoding" title="Decoding">Decoding</a></li><li><a href="#encoding" title="Encoding">Encoding</a></li><li><a href="#customization" title="Customization">Customization</a></li><li><a href="#testing-and-parity" title="Testing and Parity">Testing and Parity</a></li><li><a href="#fuzzing" title="Fuzzing">Fuzzing</a></li><li><a href="#performance" title="Performance">Performance</a></li><li><a href="#stability-policy" title="Stability Policy">Stability Policy</a></li><li><a href="#support-policy" title="Support Policy">Support Policy</a></li></ul></li></ul><h3><a href="#reexports">Crate Items</a></h3><ul class="block"><li><a href="#reexports" title="Re-exports">Re-exports</a></li><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#functions" title="Functions">Functions</a></li><li><a href="#types" title="Type Aliases">Type Aliases</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>qs_rust</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/qs_rust/lib.rs.html#1-37">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="qs_rust"><a class="doc-anchor" href="#qs_rust">§</a>qs_rust</h2>
+<p><img src="https://github.com/techouse/qs_rust/blob/main/logo.png?raw=true" alt="qs_rust" /></p>
+<p>A query string encoding and decoding library for Rust.</p>
+<p>Ported from <a href="https://www.npmjs.com/package/qs">qs</a> for JavaScript.</p>
+<p><a href="https://crates.io/crates/qs_rust"><img src="https://img.shields.io/crates/v/qs_rust" alt="Crates.io Version" /></a>
+<a href="https://crates.io/crates/qs_rust"><img src="https://img.shields.io/crates/msrv/qs_rust" alt="Crates.io MSRV" /></a>
+<a href="https://crates.io/crates/qs_rust"><img src="https://img.shields.io/crates/size/qs_rust" alt="Crates.io Size" /></a>
+<a href="https://crates.io/crates/qs_rust"><img src="https://img.shields.io/crates/dr/qs_rust" alt="Crates.io Downloads (recent)" /></a>
+<a href="https://github.com/techouse/qs_rust/actions/workflows/test.yml"><img src="https://github.com/techouse/qs_rust/actions/workflows/test.yml/badge.svg" alt="Test" /></a>
+<a href="https://codecov.io/gh/techouse/qs_rust"><img src="https://codecov.io/gh/techouse/qs_rust/graph/badge.svg?token=DHq7RZTFAn" alt="codecov" /></a>
+<a href="https://app.codacy.com/gh/techouse/qs_rust/dashboard?utm_source=gh&amp;utm_medium=referral&amp;utm_content=&amp;utm_campaign=Badge_grade"><img src="https://app.codacy.com/project/badge/Grade/51927280c1814424b844cad1eec67180" alt="Codacy Badge" /></a>
+<a href="https://github.com/techouse/qs_rust/blob/main/LICENSE"><img src="https://img.shields.io/github/license/techouse/qs_rust" alt="GitHub" /></a>
+<a href="https://github.com/sponsors/techouse"><img src="https://img.shields.io/github/sponsors/techouse" alt="GitHub Sponsors" /></a>
+<a href="https://github.com/techouse/qs_rust/stargazers"><img src="https://img.shields.io/github/stars/techouse/qs_rust" alt="GitHub Repo stars" /></a></p>
+<h3 id="highlights"><a class="doc-anchor" href="#highlights">§</a>Highlights</h3>
+<ul>
+<li>Nested object and list support: <code>foo[bar][baz]=qux</code> ⇄ nested <code>Value::Object</code> / <code>Value::Array</code></li>
+<li>Multiple list formats: indices, brackets, repeat, and comma</li>
+<li>Dot-notation support plus <code>decode_dot_in_keys</code> / <code>encode_dot_in_keys</code></li>
+<li>UTF-8 and Latin-1 charsets, optional charset sentinel support, and numeric-entity decoding</li>
+<li>Explicit Rust hook surfaces for custom decoding, filtering, sorting, scalar encoding, and temporal serialization</li>
+<li>Iterative decode, merge, compact, and encode paths for deep-input safety</li>
+<li>Node-backed parity tests plus cross-port regressions and perf tooling checked into the repo</li>
+</ul>
+<h3 id="installation"><a class="doc-anchor" href="#installation">§</a>Installation</h3><div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+qs_rust = &quot;1.0.0&quot;</code></pre></div>
+<p>Optional <code>serde</code> support:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+qs_rust = { version = &quot;1.0.0&quot;, features = [&quot;serde&quot;] }</code></pre></div>
+<p>Optional temporal adapters:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+qs_rust = { version = &quot;1.0.0&quot;, features = [&quot;chrono&quot;, &quot;time&quot;] }</code></pre></div><h3 id="quick-start"><a class="doc-anchor" href="#quick-start">§</a>Quick Start</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{decode, encode, DecodeOptions, EncodeOptions, ListFormat, Value};
+
+<span class="kw">let </span>decoded = decode(
+    <span class="string">"user[name]=alice&amp;tags[]=x&amp;tags[]=y"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new(),
+)
+.unwrap();
+
+<span class="macro">assert!</span>(decoded.contains_key(<span class="string">"user"</span>));
+<span class="macro">assert!</span>(decoded.contains_key(<span class="string">"tags"</span>));
+
+<span class="kw">let </span>value = Value::Object(
+    [
+        (
+            <span class="string">"user"</span>.to_owned(),
+            Value::Object([(<span class="string">"name"</span>.to_owned(), Value::String(<span class="string">"alice"</span>.to_owned()))].into()),
+        ),
+        (
+            <span class="string">"tags"</span>.to_owned(),
+            Value::Array(<span class="macro">vec!</span>[
+                Value::String(<span class="string">"x"</span>.to_owned()),
+                Value::String(<span class="string">"y"</span>.to_owned()),
+            ]),
+        ),
+    ]
+    .into(),
+);
+
+<span class="kw">let </span>encoded = encode(
+    <span class="kw-2">&amp;</span>value,
+    <span class="kw-2">&amp;</span>EncodeOptions::new().with_list_format(ListFormat::Brackets),
+)
+.unwrap();
+
+<span class="macro">assert_eq!</span>(encoded, <span class="string">"user%5Bname%5D=alice&amp;tags%5B%5D=x&amp;tags%5B%5D=y"</span>);</code></pre></div>
+<p>Query-string decoding only produces <code>Null</code>, <code>String</code>, <code>Array</code>, and <code>Object</code>. Structured inputs passed to <code>encode</code> or <code>decode_pairs</code> may also contain <code>Bool</code>, numeric variants, and <code>Bytes</code>.</p>
+<h3 id="decoding"><a class="doc-anchor" href="#decoding">§</a>Decoding</h3><h4 id="nested-objects-depth-prefixes-and-delimiters"><a class="doc-anchor" href="#nested-objects-depth-prefixes-and-delimiters">§</a>Nested Objects, Depth, Prefixes, and Delimiters</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{decode, DecodeOptions, Delimiter, Value};
+
+<span class="kw">let </span>nested = decode(<span class="string">"foo[bar][baz]=qux"</span>, <span class="kw-2">&amp;</span>DecodeOptions::new()).unwrap();
+<span class="macro">assert_eq!</span>(
+    nested.get(<span class="string">"foo"</span>),
+    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Object(
+        [(
+            <span class="string">"bar"</span>.to_owned(),
+            Value::Object([(<span class="string">"baz"</span>.to_owned(), Value::String(<span class="string">"qux"</span>.to_owned()))].into()),
+        )]
+        .into(),
+    )),
+);
+
+<span class="kw">let </span>depth_limited = decode(
+    <span class="string">"a[b][c][d][e][f][g]=x"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new().with_depth(<span class="number">1</span>),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(
+    depth_limited.get(<span class="string">"a"</span>),
+    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Object(
+        [(
+            <span class="string">"b"</span>.to_owned(),
+            Value::Object([(<span class="string">"[c][d][e][f][g]"</span>.to_owned(), Value::String(<span class="string">"x"</span>.to_owned()))].into()),
+        )]
+        .into(),
+    )),
+);
+
+<span class="kw">let </span>prefixed = decode(
+    <span class="string">"?a=b&amp;c=d"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new().with_ignore_query_prefix(<span class="bool-val">true</span>),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(prefixed.get(<span class="string">"a"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"b"</span>.to_owned())));
+<span class="macro">assert_eq!</span>(prefixed.get(<span class="string">"c"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"d"</span>.to_owned())));
+
+<span class="kw">let </span>custom_delimiter = decode(
+    <span class="string">"a=b;c=d"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new().with_delimiter(Delimiter::String(<span class="string">";"</span>.to_owned())),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(custom_delimiter.get(<span class="string">"a"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"b"</span>.to_owned())));
+<span class="macro">assert_eq!</span>(custom_delimiter.get(<span class="string">"c"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"d"</span>.to_owned())));</code></pre></div>
+<p>By default, decoding depth is <code>5</code>, parameter limit is <code>1000</code>, lists are compacted, and duplicate keys are combined into arrays.</p>
+<h4 id="dots-lists-duplicates-and-scalar-values"><a class="doc-anchor" href="#dots-lists-duplicates-and-scalar-values">§</a>Dots, Lists, Duplicates, and Scalar Values</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{decode, DecodeOptions, Duplicates, Value};
+
+<span class="kw">let </span>dotted = decode(<span class="string">"a.b=c"</span>, <span class="kw-2">&amp;</span>DecodeOptions::new().with_allow_dots(<span class="bool-val">true</span>)).unwrap();
+<span class="macro">assert_eq!</span>(
+    dotted.get(<span class="string">"a"</span>),
+    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Object([(<span class="string">"b"</span>.to_owned(), Value::String(<span class="string">"c"</span>.to_owned()))].into())),
+);
+
+<span class="kw">let </span>decoded_dot_key = decode(
+    <span class="string">"name%252Eobj.first=John&amp;name%252Eobj.last=Doe"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new().with_decode_dot_in_keys(<span class="bool-val">true</span>),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(
+    decoded_dot_key.get(<span class="string">"name.obj"</span>),
+    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Object(
+        [
+            (<span class="string">"first"</span>.to_owned(), Value::String(<span class="string">"John"</span>.to_owned())),
+            (<span class="string">"last"</span>.to_owned(), Value::String(<span class="string">"Doe"</span>.to_owned())),
+        ]
+        .into(),
+    )),
+);
+
+<span class="kw">let </span>list = decode(<span class="string">"a[]=b&amp;a[]=c"</span>, <span class="kw-2">&amp;</span>DecodeOptions::new()).unwrap();
+<span class="macro">assert_eq!</span>(
+    list.get(<span class="string">"a"</span>),
+    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Array(<span class="macro">vec!</span>[
+        Value::String(<span class="string">"b"</span>.to_owned()),
+        Value::String(<span class="string">"c"</span>.to_owned()),
+    ])),
+);
+
+<span class="kw">let </span>empty_list = decode(
+    <span class="string">"foo[]&amp;bar=baz"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new().with_allow_empty_lists(<span class="bool-val">true</span>),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(empty_list.get(<span class="string">"foo"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Array(<span class="macro">vec!</span>[])));
+
+<span class="kw">let </span>first = decode(
+    <span class="string">"foo=bar&amp;foo=baz"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new().with_duplicates(Duplicates::First),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(first.get(<span class="string">"foo"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"bar"</span>.to_owned())));
+
+<span class="kw">let </span>comma = decode(<span class="string">"a=b,c"</span>, <span class="kw-2">&amp;</span>DecodeOptions::new().with_comma(<span class="bool-val">true</span>)).unwrap();
+<span class="macro">assert_eq!</span>(
+    comma.get(<span class="string">"a"</span>),
+    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Array(<span class="macro">vec!</span>[
+        Value::String(<span class="string">"b"</span>.to_owned()),
+        Value::String(<span class="string">"c"</span>.to_owned()),
+    ])),
+);
+
+<span class="kw">let </span>scalars = decode(<span class="string">"a=15&amp;b=true&amp;c=null"</span>, <span class="kw-2">&amp;</span>DecodeOptions::new()).unwrap();
+<span class="macro">assert_eq!</span>(scalars.get(<span class="string">"a"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"15"</span>.to_owned())));
+<span class="macro">assert_eq!</span>(scalars.get(<span class="string">"b"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"true"</span>.to_owned())));
+<span class="macro">assert_eq!</span>(scalars.get(<span class="string">"c"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"null"</span>.to_owned())));</code></pre></div><h4 id="charset-sentinels-numeric-entities-and-strict-null-handling"><a class="doc-anchor" href="#charset-sentinels-numeric-entities-and-strict-null-handling">§</a>Charset Sentinels, Numeric Entities, and Strict Null Handling</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{decode, Charset, DecodeOptions, Value};
+
+<span class="kw">let </span>latin1 = decode(
+    <span class="string">"a=%A7"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new().with_charset(Charset::Iso88591),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(latin1.get(<span class="string">"a"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"§"</span>.to_owned())));
+
+<span class="kw">let </span>utf8_sentinel = decode(
+    <span class="string">"utf8=%E2%9C%93&amp;a=%C3%B8"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new()
+        .with_charset(Charset::Iso88591)
+        .with_charset_sentinel(<span class="bool-val">true</span>),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(utf8_sentinel.get(<span class="string">"a"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"ø"</span>.to_owned())));
+
+<span class="kw">let </span>numeric_entities = decode(
+    <span class="string">"a=%26%239786%3B"</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new()
+        .with_charset(Charset::Iso88591)
+        .with_interpret_numeric_entities(<span class="bool-val">true</span>),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(numeric_entities.get(<span class="string">"a"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"☺"</span>.to_owned())));
+
+<span class="kw">let </span>strict_null = decode(
+    <span class="string">"a&amp;b="</span>,
+    <span class="kw-2">&amp;</span>DecodeOptions::new().with_strict_null_handling(<span class="bool-val">true</span>),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(strict_null.get(<span class="string">"a"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Null));
+<span class="macro">assert_eq!</span>(strict_null.get(<span class="string">"b"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(String::new())));</code></pre></div><h4 id="structured-input-with-decode_pairs"><a class="doc-anchor" href="#structured-input-with-decode_pairs">§</a>Structured Input With <code>decode_pairs</code></h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{decode_pairs, DecodeOptions, Value};
+
+<span class="kw">let </span>decoded = decode_pairs(
+    <span class="macro">vec!</span>[
+        (<span class="string">"a[b]"</span>.to_owned(), Value::String(<span class="string">"1"</span>.to_owned())),
+        (<span class="string">"a[b]"</span>.to_owned(), Value::String(<span class="string">"2"</span>.to_owned())),
+    ],
+    <span class="kw-2">&amp;</span>DecodeOptions::new(),
+)
+.unwrap();
+
+<span class="macro">assert_eq!</span>(
+    decoded.get(<span class="string">"a"</span>),
+    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Object([(
+        <span class="string">"b"</span>.to_owned(),
+        Value::Array(<span class="macro">vec!</span>[
+            Value::String(<span class="string">"1"</span>.to_owned()),
+            Value::String(<span class="string">"2"</span>.to_owned()),
+        ]),
+    )]
+    .into())),
+);</code></pre></div>
+<p><code>decode_pairs</code> starts at the structured merge pipeline and intentionally bypasses raw query-string behaviors such as delimiter splitting, query-prefix stripping, charset sentinel detection, and numeric-entity interpretation.</p>
+<h3 id="encoding"><a class="doc-anchor" href="#encoding">§</a>Encoding</h3><h4 id="basics-and-nested-objects"><a class="doc-anchor" href="#basics-and-nested-objects">§</a>Basics and Nested Objects</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{encode, EncodeOptions, Value};
+
+<span class="kw">let </span>simple = Value::Object([(<span class="string">"a"</span>.to_owned(), Value::String(<span class="string">"b"</span>.to_owned()))].into());
+<span class="macro">assert_eq!</span>(encode(<span class="kw-2">&amp;</span>simple, <span class="kw-2">&amp;</span>EncodeOptions::new()).unwrap(), <span class="string">"a=b"</span>);
+
+<span class="kw">let </span>nested = Value::Object(
+    [(
+        <span class="string">"a"</span>.to_owned(),
+        Value::Object([(<span class="string">"b"</span>.to_owned(), Value::String(<span class="string">"c"</span>.to_owned()))].into()),
+    )]
+    .into(),
+);
+<span class="macro">assert_eq!</span>(encode(<span class="kw-2">&amp;</span>nested, <span class="kw-2">&amp;</span>EncodeOptions::new()).unwrap(), <span class="string">"a%5Bb%5D=c"</span>);
+<span class="macro">assert_eq!</span>(
+    encode(<span class="kw-2">&amp;</span>nested, <span class="kw-2">&amp;</span>EncodeOptions::new().with_encode(<span class="bool-val">false</span>)).unwrap(),
+    <span class="string">"a[b]=c"
+</span>);</code></pre></div><h4 id="list-formats"><a class="doc-anchor" href="#list-formats">§</a>List Formats</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{encode, EncodeOptions, ListFormat, Value};
+
+<span class="kw">let </span>data = Value::Object(
+    [(
+        <span class="string">"a"</span>.to_owned(),
+        Value::Array(<span class="macro">vec!</span>[
+            Value::String(<span class="string">"b"</span>.to_owned()),
+            Value::String(<span class="string">"c"</span>.to_owned()),
+        ]),
+    )]
+    .into(),
+);
+
+<span class="macro">assert_eq!</span>(
+    encode(<span class="kw-2">&amp;</span>data, <span class="kw-2">&amp;</span>EncodeOptions::new().with_encode(<span class="bool-val">false</span>)).unwrap(),
+    <span class="string">"a[0]=b&amp;a[1]=c"
+</span>);
+<span class="macro">assert_eq!</span>(
+    encode(
+        <span class="kw-2">&amp;</span>data,
+        <span class="kw-2">&amp;</span>EncodeOptions::new()
+            .with_encode(<span class="bool-val">false</span>)
+            .with_list_format(ListFormat::Brackets),
+    )
+    .unwrap(),
+    <span class="string">"a[]=b&amp;a[]=c"
+</span>);
+<span class="macro">assert_eq!</span>(
+    encode(
+        <span class="kw-2">&amp;</span>data,
+        <span class="kw-2">&amp;</span>EncodeOptions::new()
+            .with_encode(<span class="bool-val">false</span>)
+            .with_list_format(ListFormat::Repeat),
+    )
+    .unwrap(),
+    <span class="string">"a=b&amp;a=c"
+</span>);
+<span class="macro">assert_eq!</span>(
+    encode(
+        <span class="kw-2">&amp;</span>data,
+        <span class="kw-2">&amp;</span>EncodeOptions::new()
+            .with_encode(<span class="bool-val">false</span>)
+            .with_list_format(ListFormat::Comma),
+    )
+    .unwrap(),
+    <span class="string">"a=b,c"
+</span>);</code></pre></div><h4 id="dot-notation-empty-lists-prefixes-and-delimiters"><a class="doc-anchor" href="#dot-notation-empty-lists-prefixes-and-delimiters">§</a>Dot Notation, Empty Lists, Prefixes, and Delimiters</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{encode, EncodeOptions, Value};
+
+<span class="kw">let </span>dotted = Value::Object(
+    [(
+        <span class="string">"a"</span>.to_owned(),
+        Value::Object(
+            [(
+                <span class="string">"b"</span>.to_owned(),
+                Value::Object([(<span class="string">"c"</span>.to_owned(), Value::String(<span class="string">"d"</span>.to_owned()))].into()),
+            )]
+            .into(),
+        ),
+    )]
+    .into(),
+);
+<span class="macro">assert_eq!</span>(
+    encode(
+        <span class="kw-2">&amp;</span>dotted,
+        <span class="kw-2">&amp;</span>EncodeOptions::new()
+            .with_encode(<span class="bool-val">false</span>)
+            .with_allow_dots(<span class="bool-val">true</span>),
+    )
+    .unwrap(),
+    <span class="string">"a.b.c=d"
+</span>);
+
+<span class="kw">let </span>encoded_dot_key = Value::Object(
+    [(
+        <span class="string">"name.obj"</span>.to_owned(),
+        Value::Object(
+            [
+                (<span class="string">"first"</span>.to_owned(), Value::String(<span class="string">"John"</span>.to_owned())),
+                (<span class="string">"last"</span>.to_owned(), Value::String(<span class="string">"Doe"</span>.to_owned())),
+            ]
+            .into(),
+        ),
+    )]
+    .into(),
+);
+<span class="macro">assert_eq!</span>(
+    encode(
+        <span class="kw-2">&amp;</span>encoded_dot_key,
+        <span class="kw-2">&amp;</span>EncodeOptions::new()
+            .with_allow_dots(<span class="bool-val">true</span>)
+            .with_encode_dot_in_keys(<span class="bool-val">true</span>),
+    )
+    .unwrap(),
+    <span class="string">"name%252Eobj.first=John&amp;name%252Eobj.last=Doe"
+</span>);
+
+<span class="kw">let </span>empty_list = Value::Object(
+    [
+        (<span class="string">"foo"</span>.to_owned(), Value::Array(<span class="macro">vec!</span>[])),
+        (<span class="string">"bar"</span>.to_owned(), Value::String(<span class="string">"baz"</span>.to_owned())),
+    ]
+    .into(),
+);
+<span class="macro">assert_eq!</span>(
+    encode(
+        <span class="kw-2">&amp;</span>empty_list,
+        <span class="kw-2">&amp;</span>EncodeOptions::new()
+            .with_encode(<span class="bool-val">false</span>)
+            .with_allow_empty_lists(<span class="bool-val">true</span>),
+    )
+    .unwrap(),
+    <span class="string">"foo[]&amp;bar=baz"
+</span>);
+
+<span class="kw">let </span>prefixed = Value::Object(
+    [
+        (<span class="string">"a"</span>.to_owned(), Value::String(<span class="string">"b"</span>.to_owned())),
+        (<span class="string">"c"</span>.to_owned(), Value::String(<span class="string">"d"</span>.to_owned())),
+    ]
+    .into(),
+);
+<span class="macro">assert_eq!</span>(
+    encode(<span class="kw-2">&amp;</span>prefixed, <span class="kw-2">&amp;</span>EncodeOptions::new().with_add_query_prefix(<span class="bool-val">true</span>)).unwrap(),
+    <span class="string">"?a=b&amp;c=d"
+</span>);
+<span class="macro">assert_eq!</span>(
+    encode(<span class="kw-2">&amp;</span>prefixed, <span class="kw-2">&amp;</span>EncodeOptions::new().with_delimiter(<span class="string">";"</span>)).unwrap(),
+    <span class="string">"a=b;c=d"
+</span>);</code></pre></div><h4 id="nulls-bytes-charset-sentinels-and-rfc-1738-formatting"><a class="doc-anchor" href="#nulls-bytes-charset-sentinels-and-rfc-1738-formatting">§</a>Nulls, Bytes, Charset Sentinels, and RFC 1738 Formatting</h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{decode, encode, Charset, DecodeOptions, EncodeOptions, Format, Value};
+
+<span class="kw">let </span>with_nulls = Value::Object(
+    [
+        (<span class="string">"a"</span>.to_owned(), Value::Null),
+        (<span class="string">"b"</span>.to_owned(), Value::String(String::new())),
+    ]
+    .into(),
+);
+<span class="macro">assert_eq!</span>(encode(<span class="kw-2">&amp;</span>with_nulls, <span class="kw-2">&amp;</span>EncodeOptions::new()).unwrap(), <span class="string">"a=&amp;b="</span>);
+<span class="macro">assert_eq!</span>(
+    encode(
+        <span class="kw-2">&amp;</span>with_nulls,
+        <span class="kw-2">&amp;</span>EncodeOptions::new().with_strict_null_handling(<span class="bool-val">true</span>),
+    )
+    .unwrap(),
+    <span class="string">"a&amp;b="
+</span>);
+
+<span class="kw">let </span>skip_nulls = Value::Object(
+    [
+        (<span class="string">"a"</span>.to_owned(), Value::String(<span class="string">"b"</span>.to_owned())),
+        (<span class="string">"c"</span>.to_owned(), Value::Null),
+    ]
+    .into(),
+);
+<span class="macro">assert_eq!</span>(
+    encode(<span class="kw-2">&amp;</span>skip_nulls, <span class="kw-2">&amp;</span>EncodeOptions::new().with_skip_nulls(<span class="bool-val">true</span>)).unwrap(),
+    <span class="string">"a=b"
+</span>);
+
+<span class="kw">let </span>bytes = Value::Object([(<span class="string">"data"</span>.to_owned(), Value::Bytes(<span class="macro">vec!</span>[<span class="number">0x41</span>, <span class="number">0x20</span>, <span class="number">0xFF</span>]))].into());
+<span class="macro">assert_eq!</span>(
+    encode(
+        <span class="kw-2">&amp;</span>bytes,
+        <span class="kw-2">&amp;</span>EncodeOptions::new().with_charset(Charset::Iso88591),
+    )
+    .unwrap(),
+    <span class="string">"data=A%20%FF"
+</span>);
+
+<span class="kw">let </span>latin1 = Value::Object([(<span class="string">"æ"</span>.to_owned(), Value::String(<span class="string">"æ"</span>.to_owned()))].into());
+<span class="macro">assert_eq!</span>(
+    encode(
+        <span class="kw-2">&amp;</span>latin1,
+        <span class="kw-2">&amp;</span>EncodeOptions::new().with_charset(Charset::Iso88591),
+    )
+    .unwrap(),
+    <span class="string">"%E6=%E6"
+</span>);
+
+<span class="kw">let </span>sentinel = Value::Object([(<span class="string">"a"</span>.to_owned(), Value::String(<span class="string">"☺"</span>.to_owned()))].into());
+<span class="macro">assert_eq!</span>(
+    encode(<span class="kw-2">&amp;</span>sentinel, <span class="kw-2">&amp;</span>EncodeOptions::new().with_charset_sentinel(<span class="bool-val">true</span>)).unwrap(),
+    <span class="string">"utf8=%E2%9C%93&amp;a=%E2%98%BA"
+</span>);
+
+<span class="kw">let </span>rfc1738 = Value::Object([(<span class="string">"a"</span>.to_owned(), Value::String(<span class="string">"b c"</span>.to_owned()))].into());
+<span class="macro">assert_eq!</span>(encode(<span class="kw-2">&amp;</span>rfc1738, <span class="kw-2">&amp;</span>EncodeOptions::new()).unwrap(), <span class="string">"a=b%20c"</span>);
+<span class="macro">assert_eq!</span>(
+    encode(<span class="kw-2">&amp;</span>rfc1738, <span class="kw-2">&amp;</span>EncodeOptions::new().with_format(Format::Rfc1738)).unwrap(),
+    <span class="string">"a=b+c"
+</span>);
+
+<span class="kw">let </span>round_trip = decode(<span class="string">"a&amp;b="</span>, <span class="kw-2">&amp;</span>DecodeOptions::new().with_strict_null_handling(<span class="bool-val">true</span>)).unwrap();
+<span class="macro">assert_eq!</span>(round_trip.get(<span class="string">"a"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::Null));
+<span class="macro">assert_eq!</span>(round_trip.get(<span class="string">"b"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(String::new())));</code></pre></div><h3 id="customization"><a class="doc-anchor" href="#customization">§</a>Customization</h3>
+<p>The sibling ports expose callback-heavy surfaces. In Rust those are available through explicit, typed hooks.
+Rust does not expose a standalone public <code>Undefined</code> value; the sibling omission behavior is represented by
+<code>FilterResult::Omit</code> in encode callbacks.</p>
+<p>The callback-free convenience layer is also part of the public encode surface:</p>
+<ul>
+<li><code>EncodeOptions::with_whitelist(...)</code> uses <code>WhitelistSelector::{Key, Index}</code> for key/index selection</li>
+<li><code>EncodeOptions::with_sort(...)</code> uses <code>SortMode::{Preserve, LexicographicAsc}</code> for built-in ordering</li>
+<li><code>Value::Object</code> uses the public <code>Object</code> alias, which is an ordered <code>IndexMap&lt;String, Value&gt;</code></li>
+</ul>
+<h4 id="custom-decode-filter-sort-and-encode-hooks"><a class="doc-anchor" href="#custom-decode-filter-sort-and-encode-hooks">§</a>Custom Decode, Filter, Sort, and Encode Hooks</h4>
+<p><code>EncodeTokenEncoder</code> receives explicit <code>EncodeToken::{Key, Value, TextValue}</code> variants so Rust callers can distinguish key-path tokens from normal values and joined comma-list text.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>qs_rust::{
+    decode, encode, DecodeDecoder, DecodeKind, DecodeOptions, EncodeFilter, EncodeOptions,
+    EncodeToken, EncodeTokenEncoder, FilterResult, FunctionFilter, Sorter, Value,
+};
+
+<span class="kw">let </span>decode_options = DecodeOptions::new().with_decoder(<span class="prelude-val">Some</span>(DecodeDecoder::new(
+    |raw, _charset, kind| <span class="kw">match </span>kind {
+        DecodeKind::Key =&gt; raw.to_owned(),
+        DecodeKind::Value =&gt; raw.to_ascii_uppercase(),
+    },
+)));
+<span class="kw">let </span>decoded = decode(<span class="string">"a=hello"</span>, <span class="kw-2">&amp;</span>decode_options).unwrap();
+<span class="macro">assert_eq!</span>(decoded.get(<span class="string">"a"</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Value::String(<span class="string">"HELLO"</span>.to_owned())));
+
+<span class="kw">let </span>filtered = Value::Object(
+    [
+        (<span class="string">"b"</span>.to_owned(), Value::String(<span class="string">"2"</span>.to_owned())),
+        (<span class="string">"secret"</span>.to_owned(), Value::String(<span class="string">"x"</span>.to_owned())),
+        (<span class="string">"a"</span>.to_owned(), Value::String(<span class="string">"1"</span>.to_owned())),
+    ]
+    .into(),
+);
+<span class="kw">let </span>encoded = encode(
+    <span class="kw-2">&amp;</span>filtered,
+    <span class="kw-2">&amp;</span>EncodeOptions::new()
+        .with_encode(<span class="bool-val">false</span>)
+        .with_filter(<span class="prelude-val">Some</span>(EncodeFilter::Function(FunctionFilter::new(
+            |prefix, <span class="kw">_</span>| {
+                <span class="kw">if </span>prefix.ends_with(<span class="string">"secret"</span>) {
+                    FilterResult::Omit
+                } <span class="kw">else </span>{
+                    FilterResult::Keep
+                }
+            },
+        ))))
+        .with_sorter(<span class="prelude-val">Some</span>(Sorter::new(|left, right| left.cmp(right)))),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(encoded, <span class="string">"a=1&amp;b=2"</span>);
+
+<span class="kw">let </span>numbers = Value::Object(
+    [
+        (<span class="string">"b"</span>.to_owned(), Value::I64(<span class="number">2</span>)),
+        (<span class="string">"a"</span>.to_owned(), Value::I64(<span class="number">1</span>)),
+    ]
+    .into(),
+);
+<span class="kw">let </span>encoded_numbers = encode(
+    <span class="kw-2">&amp;</span>numbers,
+    <span class="kw-2">&amp;</span>EncodeOptions::new()
+        .with_encode(<span class="bool-val">false</span>)
+        .with_encoder(<span class="prelude-val">Some</span>(EncodeTokenEncoder::new(|token, <span class="kw">_</span>, <span class="kw">_</span>| <span class="kw">match </span>token {
+            EncodeToken::Key(key) =&gt; key.to_owned(),
+            EncodeToken::Value(Value::I64(number)) =&gt; <span class="macro">format!</span>(<span class="string">"n:{number}"</span>),
+            EncodeToken::Value(Value::String(text)) =&gt; text.clone(),
+            EncodeToken::TextValue(text) =&gt; text.to_owned(),
+            EncodeToken::Value(<span class="kw">_</span>) =&gt; String::new(),
+        })))
+        .with_sorter(<span class="prelude-val">Some</span>(Sorter::new(|left, right| right.cmp(left)))),
+)
+.unwrap();
+<span class="macro">assert_eq!</span>(encoded_numbers, <span class="string">"b=n:2&amp;a=n:1"</span>);</code></pre></div><h4 id="temporal-values"><a class="doc-anchor" href="#temporal-values">§</a>Temporal Values</h4>
+<p><code>qs_rust</code> now has a core temporal leaf:</p>
+<ul>
+<li><code>Value::Temporal(TemporalValue)</code></li>
+</ul>
+<p>The default formatter emits canonical ISO-8601 datetime text:</p>
+<ul>
+<li>offset-aware values: <code>YYYY-MM-DDTHH:MM:SS[.fraction](Z|±HH:MM)</code></li>
+<li>naive values: <code>YYYY-MM-DDTHH:MM:SS[.fraction]</code></li>
+</ul>
+<p>For custom temporal output, use the core serializer hook:</p>
+<ul>
+<li><code>EncodeOptions::with_temporal_serializer(Some(TemporalSerializer::new(...)))</code></li>
+</ul>
+<p>Feature-gated adapters remain available for converting native runtime types into
+that core temporal model:</p>
+<ul>
+<li><code>chrono_support</code> behind the <code>chrono</code> feature</li>
+<li><code>time_support</code> behind the <code>time</code> feature</li>
+</ul>
+<p>Those helpers now produce <code>Value::Temporal(...)</code> directly, so temporal leaves can
+live inside arbitrary nested arrays or objects without being pre-stringified.</p>
+<h4 id="serde-bridge-and-errors"><a class="doc-anchor" href="#serde-bridge-and-errors">§</a>Serde Bridge and Errors</h4>
+<p>With the <code>serde</code> feature enabled, <code>from_str(...)</code>, <code>to_string(...)</code>,
+<code>from_value(...)</code>, and <code>to_value(...)</code> all route typed data through the same
+semantic core as the dynamic <code>Value</code> API.</p>
+<p>That means plain query-string scalars arrive with the same semantics as <code>Value</code>: values such as <code>page=2</code> and <code>admin=true</code> decode as strings unless your serde model adds its own conversion layer.</p>
+<p>Generic typed serde remains stringly for ordinary datetime-like fields too. If
+you want typed models to preserve temporal leaves instead of collapsing them to
+strings, use the opt-in helper modules under <code>qs_rust::serde::temporal::*</code>.</p>
+<p>For a runnable typed example, use:</p>
+<div class="example-wrap"><pre class="language-bash"><code>cargo run --example serde_bridge --features serde</code></pre></div>
+<p>Compared with <code>serde_qs</code>, <code>qs_rust</code> keeps the dynamic <code>qs</code> semantic core and
+layers serde on top of it. For validated overlap cases, intentional
+divergences such as stringly scalar decode and duplicate-key handling, and
+<code>serde_qs</code>-only extras that are out of scope for this bridge, see
+<a href="https://github.com/techouse/qs_rust/blob/main/docs/serde_comparison.md">docs/serde_comparison.md</a>.</p>
+<p><code>DecodeError</code> and <code>EncodeError</code> are <code>#[non_exhaustive]</code>. Match them with a catch-all arm and prefer the stable inspector helpers (<code>is_*</code>, <code>*_limit()</code>) when you need durable error introspection.</p>
+<h3 id="testing-and-parity"><a class="doc-anchor" href="#testing-and-parity">§</a>Testing and Parity</h3>
+<p>The repository includes two Node-backed comparison layers:</p>
+<ul>
+<li><code>tests/comparison.rs</code> runs the checked-in smoke corpus from <code>tests/comparison/test_cases.json</code></li>
+<li>typed parity suites shell out to Node <code>qs</code> for per-case comparisons</li>
+</ul>
+<p>Before running the Node-backed tests, bootstrap the fixture environment:</p>
+<div class="example-wrap"><pre class="language-bash"><code>cd tests/comparison/js
+npm ci</code></pre></div>
+<p>The checked-in <code>package-lock.json</code> pins <code>qs</code> to <code>6.15.0</code>.</p>
+<p>Rust-specific behavior lives alongside that parity layer:</p>
+<ul>
+<li><code>tests/regressions.rs</code> covers <code>decode_pairs</code>, <code>Bytes</code>, serde boundaries, deep stack-safety, and sibling-port-specific edge cases</li>
+<li><code>tests/properties_*.rs</code> cover randomized encode/decode/round-trip invariants</li>
+<li><code>tests/porting_ledger.md</code> records which Node/Python/Dart/Kotlin/C#/Swift cases were ported, skipped, or intentionally diverged</li>
+</ul>
+<h3 id="fuzzing"><a class="doc-anchor" href="#fuzzing">§</a>Fuzzing</h3>
+<p>The repository also includes a local-only <code>cargo-fuzz</code> harness for hostile-input hardening of the three public entrypoints:</p>
+<ul>
+<li><code>decode</code></li>
+<li><code>encode</code></li>
+<li><code>decode_pairs</code></li>
+</ul>
+<p>The fuzz targets are intentionally crash-focused for the first pass: successful results and clean <code>Err(...)</code> values are both acceptable. The goal is to catch panics, sanitizer failures, or obvious hang/regression cases on bounded inputs.</p>
+<p>Install the tooling once:</p>
+<div class="example-wrap"><pre class="language-bash"><code>rustup toolchain install nightly
+cargo install cargo-fuzz</code></pre></div>
+<p>Build the fuzz targets:</p>
+<div class="example-wrap"><pre class="language-bash"><code>cargo +nightly fuzz build decode
+cargo +nightly fuzz build encode
+cargo +nightly fuzz build decode_pairs</code></pre></div>
+<p>Run short local smoke sessions against a disposable copy of the committed corpus so libFuzzer does not spray generated inputs back into the tracked <code>fuzz/corpus/</code> tree:</p>
+<div class="example-wrap"><pre class="language-bash"><code>tmpdir=&quot;$(mktemp -d /tmp/qs_rust_fuzz_decode.XXXXXX)&quot;
+cp -R fuzz/corpus/decode/. &quot;$tmpdir&quot;/
+cargo +nightly fuzz run decode &quot;$tmpdir&quot; -- -max_total_time=60 -verbosity=0 -print_final_stats=1
+rm -rf &quot;$tmpdir&quot;
+
+tmpdir=&quot;$(mktemp -d /tmp/qs_rust_fuzz_encode.XXXXXX)&quot;
+cp -R fuzz/corpus/encode/. &quot;$tmpdir&quot;/
+cargo +nightly fuzz run encode &quot;$tmpdir&quot; -- -max_total_time=60 -verbosity=0 -print_final_stats=1
+rm -rf &quot;$tmpdir&quot;
+
+tmpdir=&quot;$(mktemp -d /tmp/qs_rust_fuzz_decode_pairs.XXXXXX)&quot;
+cp -R fuzz/corpus/decode_pairs/. &quot;$tmpdir&quot;/
+cargo +nightly fuzz run decode_pairs &quot;$tmpdir&quot; -- -max_total_time=60 -verbosity=0 -print_final_stats=1
+rm -rf &quot;$tmpdir&quot;</code></pre></div>
+<p>Run a longer balanced soak with the checked-in helper script. By default it runs each target sequentially for <code>900</code> seconds, prints the exact command and temp paths it uses, and stops on the first non-zero exit:</p>
+<div class="example-wrap"><pre class="language-bash"><code>./scripts/fuzz_soak.sh</code></pre></div>
+<p>The helper script keeps generated corpora and crash artifacts under a disposable <code>/tmp</code> root instead of the tracked <code>fuzz/corpus/</code> tree. Useful knobs:</p>
+<div class="example-wrap"><pre class="language-bash"><code># Shorter local sanity pass.
+QS_FUZZ_SECONDS=60 ./scripts/fuzz_soak.sh
+
+# Target subset.
+QS_FUZZ_TARGETS=&quot;decode encode&quot; ./scripts/fuzz_soak.sh
+
+# Extra libFuzzer arguments, appended after the default balanced soak args.
+QS_FUZZ_ARGS=&quot;-jobs=1 -workers=1&quot; ./scripts/fuzz_soak.sh
+
+# Remove the temporary /tmp work tree after a successful run.
+QS_FUZZ_CLEANUP=1 ./scripts/fuzz_soak.sh</code></pre></div>
+<p>The default balanced soak takes about <code>45</code> minutes across all three targets. The committed corpora live under <code>fuzz/corpus/</code> and use small JSON envelopes so new seeds can be added directly from README examples, parity cases, and regressions. Generated crashes and coverage output stay local in ignored paths under <code>fuzz/artifacts/</code> and <code>fuzz/coverage/</code>; disposable working corpora should stay in <code>/tmp</code> or another untracked directory.</p>
+<p>If fuzzing finds a real issue, minimize it first with <code>cargo +nightly fuzz tmin ...</code>, then promote the minimized reproducer into a normal checked-in regression test before considering the bug closed.</p>
+<h3 id="performance"><a class="doc-anchor" href="#performance">§</a>Performance</h3>
+<p>The repository includes a local release-mode perf snapshot binary and checked-in baseline artifacts:</p>
+<div class="example-wrap"><pre class="language-bash"><code>cargo run --release --bin qs_perf
+cargo run --release --bin qs_perf -- --scenario encode --format json
+cargo run --release --bin qs_perf -- --scenario decode --format json
+python3 scripts/capture_perf_baselines.py --scenario all
+python3 scripts/compare_perf_baseline.py --scenario all
+python3 scripts/cross_port_perf.py</code></pre></div>
+<p>The harness, checked-in Rust baselines, and latest cross-port comparison snapshot all live in the repo now. Refresh those artifacts from a normal interactive shell when you want new numbers, and see <a href="https://github.com/techouse/qs_rust/blob/main/docs/performance.md">docs/performance.md</a> for the trust-first capture workflow and failure-mode checks.</p>
+<h3 id="stability-policy"><a class="doc-anchor" href="#stability-policy">§</a>Stability Policy</h3>
+<p>This repository now tracks the published <code>1.0.0</code> contract. The intended <code>1.x</code> contract is the current public surface re-exported from <code>src/lib.rs</code>; changes to that surface should stay semver-compatible and only correct clear contract bugs or add clearly intended behavior.</p>
+<p>After <code>1.0.0</code>, changes should stay focused on bug fixes, test additions, documentation improvements, measurement-backed performance work, and additive features that keep the current <code>1.x</code> non-goals explicit.</p>
+<ul>
+<li>Node <code>qs</code> <code>6.15.0</code> remains the semantic baseline for shared public query-string behavior.</li>
+<li>C# remains the architectural reference for internal design decisions. Other sibling ports are informative, not normative.</li>
+<li>The semantic core is shared across the dynamic API, the typed option/enums, the callback wrappers, and the optional <code>serde</code> bridge (<code>from_str</code> / <code>to_string</code>).</li>
+<li><a href="https://github.com/techouse/qs_rust/blob/main/docs/divergences.md">docs/divergences.md</a> records the intentional <code>1.x</code> boundaries: host-object reflection, cycles, runtime bridge behavior, and other non-goals remain unsupported by design.</li>
+<li><a href="https://github.com/techouse/qs_rust/blob/main/docs/python_backend_readiness.md">docs/python_backend_readiness.md</a> defines how the future <code>qs_codec</code> native backend should consume this crate and how the Python suite should validate <code>pure</code>, <code>rust</code>, and <code>auto</code> backends.</li>
+<li>Merge, compact, finalization, and encode traversal are implemented iteratively to avoid recursion limits on deep inputs.</li>
+</ul>
+<h3 id="support-policy"><a class="doc-anchor" href="#support-policy">§</a>Support Policy</h3>
+<ul>
+<li>The crate-wide MSRV is Rust <code>1.88</code>.</li>
+<li>The support target for <code>1.x</code> is latest stable Rust plus the MSRV on Linux, macOS, and Windows.</li>
+<li>Optional features (<code>serde</code>, <code>chrono</code>, and <code>time</code>) follow the same support policy as the core crate. If a feature ever needs a newer compiler, the crate-wide MSRV should move with it instead of splitting policy.</li>
+</ul>
+</div></details><h2 id="reexports" class="section-header">Re-exports<a href="#reexports" class="anchor">§</a></h2><dl class="item-table reexports"><dt id="reexport.from_str"><code>pub use crate::serde::<a class="fn" href="serde/fn.from_str.html" title="fn qs_rust::serde::from_str">from_str</a>;</code></dt><dt id="reexport.to_string"><code>pub use crate::serde::<a class="fn" href="serde/fn.to_string.html" title="fn qs_rust::serde::to_string">to_string</a>;</code></dt><dt id="reexport.from_value"><code>pub use crate::serde::<a class="fn" href="serde/fn.from_value.html" title="fn qs_rust::serde::from_value">from_value</a>;</code></dt><dt id="reexport.to_value"><code>pub use crate::serde::<a class="fn" href="serde/fn.to_value.html" title="fn qs_rust::serde::to_value">to_value</a>;</code></dt></dl><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="chrono_support/index.html" title="mod qs_rust::chrono_support">chrono_<wbr>support</a></dt><dd><code>chrono</code> integration helpers for encoding temporal values.</dd><dt><a class="mod" href="serde/index.html" title="mod qs_rust::serde">serde</a></dt><dd>Serde integration helpers.</dd><dt><a class="mod" href="time_support/index.html" title="mod qs_rust::time_support">time_<wbr>support</a></dt><dd><code>time</code> integration helpers for encoding temporal values.</dd></dl><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.DateTimeValue.html" title="struct qs_rust::DateTimeValue">Date<wbr>Time<wbr>Value</a></dt><dd>A validated calendar date and time with an optional UTC offset.</dd><dt><a class="struct" href="struct.DecodeDecoder.html" title="struct qs_rust::DecodeDecoder">Decode<wbr>Decoder</a></dt><dd>A custom decode callback for transforming raw key and value components.</dd><dt><a class="struct" href="struct.DecodeOptions.html" title="struct qs_rust::DecodeOptions">Decode<wbr>Options</a></dt><dd>Options that control query-string decoding.</dd><dt><a class="struct" href="struct.EncodeOptions.html" title="struct qs_rust::EncodeOptions">Encode<wbr>Options</a></dt><dd>Options that control query-string encoding.</dd><dt><a class="struct" href="struct.EncodeTokenEncoder.html" title="struct qs_rust::EncodeTokenEncoder">Encode<wbr>Token<wbr>Encoder</a></dt><dd>A custom key/value encoder used by <a href="struct.EncodeOptions.html" title="struct qs_rust::EncodeOptions"><code>super::EncodeOptions</code></a>.</dd><dt><a class="struct" href="struct.FunctionFilter.html" title="struct qs_rust::FunctionFilter">Function<wbr>Filter</a></dt><dd>A callback used to filter or replace values during encoding.</dd><dt><a class="struct" href="struct.Sorter.html" title="struct qs_rust::Sorter">Sorter</a></dt><dd>A callback used to compare two object keys during encoding.</dd><dt><a class="struct" href="struct.TemporalSerializer.html" title="struct qs_rust::TemporalSerializer">Temporal<wbr>Serializer</a></dt><dd>A callback used to customize temporal serialization before encoding.</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.Charset.html" title="enum qs_rust::Charset">Charset</a></dt><dd>The character set used when encoding or decoding percent-escaped text.</dd><dt><a class="enum" href="enum.DecodeError.html" title="enum qs_rust::DecodeError">Decode<wbr>Error</a></dt><dd>Errors that can occur while decoding a query string into an <a href="type.Object.html" title="type qs_rust::Object"><code>crate::Object</code></a>.</dd><dt><a class="enum" href="enum.DecodeKind.html" title="enum qs_rust::DecodeKind">Decode<wbr>Kind</a></dt><dd>Identifies whether a custom decoder is processing a key or a value.</dd><dt><a class="enum" href="enum.Delimiter.html" title="enum qs_rust::Delimiter">Delimiter</a></dt><dd>The query-string delimiter used during decode.</dd><dt><a class="enum" href="enum.Duplicates.html" title="enum qs_rust::Duplicates">Duplicates</a></dt><dd>The strategy used when the same key appears multiple times during decode.</dd><dt><a class="enum" href="enum.EncodeError.html" title="enum qs_rust::EncodeError">Encode<wbr>Error</a></dt><dd>Errors that can occur while encoding a <a href="enum.Value.html" title="enum qs_rust::Value"><code>crate::Value</code></a> tree into a query
+string.</dd><dt><a class="enum" href="enum.EncodeFilter.html" title="enum qs_rust::EncodeFilter">Encode<wbr>Filter</a></dt><dd>The public filtering modes supported by the encoder.</dd><dt><a class="enum" href="enum.EncodeToken.html" title="enum qs_rust::EncodeToken">Encode<wbr>Token</a></dt><dd>A key or value token presented to <a href="struct.EncodeTokenEncoder.html" title="struct qs_rust::EncodeTokenEncoder"><code>EncodeTokenEncoder</code></a>.</dd><dt><a class="enum" href="enum.FilterResult.html" title="enum qs_rust::FilterResult">Filter<wbr>Result</a></dt><dd>The outcome of a function-based encode filter.</dd><dt><a class="enum" href="enum.Format.html" title="enum qs_rust::Format">Format</a></dt><dd>The percent-encoding flavor used when building query strings.</dd><dt><a class="enum" href="enum.ListFormat.html" title="enum qs_rust::ListFormat">List<wbr>Format</a></dt><dd>The list notation used when encoding arrays.</dd><dt><a class="enum" href="enum.SortMode.html" title="enum qs_rust::SortMode">Sort<wbr>Mode</a></dt><dd>The built-in key ordering mode for encoding objects.</dd><dt><a class="enum" href="enum.TemporalValue.html" title="enum qs_rust::TemporalValue">Temporal<wbr>Value</a></dt><dd>A temporal leaf stored inside <a href="enum.Value.html#variant.Temporal" title="variant qs_rust::Value::Temporal"><code>crate::Value::Temporal</code></a>.</dd><dt><a class="enum" href="enum.TemporalValueError.html" title="enum qs_rust::TemporalValueError">Temporal<wbr>Value<wbr>Error</a></dt><dd>Validation and parsing errors for <a href="enum.TemporalValue.html" title="enum qs_rust::TemporalValue"><code>TemporalValue</code></a> and <a href="struct.DateTimeValue.html" title="struct qs_rust::DateTimeValue"><code>DateTimeValue</code></a>.</dd><dt><a class="enum" href="enum.Value.html" title="enum qs_rust::Value">Value</a></dt><dd>A query-string-compatible value tree.</dd><dt><a class="enum" href="enum.WhitelistSelector.html" title="enum qs_rust::WhitelistSelector">Whitelist<wbr>Selector</a></dt><dd>A whitelist entry used to select object keys or array indices during
+encoding.</dd></dl><h2 id="functions" class="section-header">Functions<a href="#functions" class="anchor">§</a></h2><dl class="item-table"><dt><a class="fn" href="fn.decode.html" title="fn qs_rust::decode">decode</a></dt><dd>Decodes a query string into an ordered object map.</dd><dt><a class="fn" href="fn.decode_pairs.html" title="fn qs_rust::decode_pairs">decode_<wbr>pairs</a></dt><dd>Decodes an iterator of already-separated key/value pairs into an ordered
+object map.</dd><dt><a class="fn" href="fn.encode.html" title="fn qs_rust::encode">encode</a></dt><dd>Encodes a <a href="enum.Value.html" title="enum qs_rust::Value"><code>Value</code></a> tree into a query string.</dd></dl><h2 id="types" class="section-header">Type Aliases<a href="#types" class="anchor">§</a></h2><dl class="item-table"><dt><a class="type" href="type.Object.html" title="type qs_rust::Object">Object</a></dt><dd>The object representation used throughout the crate.</dd></dl></section></div></main></body></html>
