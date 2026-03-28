@@ -39,3 +39,6 @@ fuzz/corpus/**/*
 
 # Coverage
 lcov.info
+
+# macOS
+.DS_Store
