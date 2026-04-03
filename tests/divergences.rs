@@ -135,3 +135,49 @@ fn node_compatible_top_level_dots_remain_raw_when_depth_is_zero() {
         IndexMap::from([("a.b".to_owned(), Value::String("c".to_owned()))])
     );
 }
+
+#[test]
+fn wpt_url_empty_name_pairs_are_skipped_in_qs_mode() {
+    let decoded = decode("=b", &DecodeOptions::new()).unwrap();
+
+    assert!(
+        decoded.is_empty(),
+        "wpt/url/urlencoded-parser.any.js preserves the empty-name pair, but qs_rust intentionally skips it"
+    );
+}
+
+#[test]
+fn wpt_url_broken_utf8_does_not_use_whatwg_replacement_characters() {
+    let replacement_cases = [
+        ("%FF", "%FF"),
+        ("%FE%FF", "%FE%FF"),
+        ("%C2", "%C2"),
+        ("%C2x", "%C2x"),
+    ];
+
+    for (query, expected_key) in replacement_cases {
+        let decoded = decode(query, &DecodeOptions::new()).unwrap();
+        assert_eq!(
+            decoded,
+            IndexMap::from([(expected_key.to_owned(), Value::String(String::new()))]),
+            "wpt/url/urlencoded-parser.any.js would decode {query:?} with replacement characters"
+        );
+    }
+}
+
+#[test]
+fn wpt_url_default_encode_mode_stays_in_rfc3986_space_mode() {
+    let encoded = encode(
+        &Value::Object(IndexMap::from([(
+            "a".to_owned(),
+            Value::String("b c".to_owned()),
+        )])),
+        &EncodeOptions::new(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        encoded, "a=b%20c",
+        "wpt/url/urlsearchparams-stringifier.any.js expects WHATWG/RFC1738-style '+' only when callers opt into that mode"
+    );
+}
