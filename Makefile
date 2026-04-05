@@ -80,7 +80,7 @@ package-list: ## List files included in the published crate package
 
 package-check: ## Run the packaging checks used by CI
 	$(CARGO) package --locked --list --allow-dirty > $(PACKAGE_LIST)
-	! grep -E '^(fuzz/|tests/|scripts/|perf/|\.github/|\.vscode/|\.gitignore$$|AGENTS\.md|pyproject\.toml$$|src/bin/|src/.*/tests(/|\.rs$$))' $(PACKAGE_LIST)
+	! grep -E '^(fuzz/|tests/|scripts/|perf/|\.github/|\.vscode/|\.gitignore$$|AGENTS\.md|pyproject\.toml$$|src/bin/|src(/.*)?/tests(/|\.rs$$))' $(PACKAGE_LIST)
 	$(CARGO) package --locked
 
 docs: ## Build library docs with docs.rs warning settings
