@@ -32,9 +32,9 @@ jobs:
           set -euo pipefail
           msrv="$(
             awk -F'"' '
-              /^\[package\]$/ { in_package = 1; next }
-              /^\[/ { in_package = 0 }
-              in_package && /^rust-version[[:space:]]*=/ { print $2; exit }
+              /^[[:space:]]*\[package\][[:space:]]*$/ { in_package = 1; next }
+              /^[[:space:]]*\[/ { in_package = 0 }
+              in_package && /^[[:space:]]*rust-version[[:space:]]*=/ { print $2; exit }
             ' Cargo.toml
           )"
           if [[ -z "$msrv" ]]; then
@@ -205,7 +205,7 @@ jobs:
         run: |
           set -euo pipefail
           cargo package --locked --list > /tmp/package-list.txt
-          ! grep -E '^(fuzz/|tests/|scripts/|perf/|\.github/|\.vscode/|\.gitignore$|AGENTS\.md|pyproject\.toml$|src/bin/|src/.*/tests(/|\.rs$))' /tmp/package-list.txt
+          ! grep -E '^(fuzz/|tests/|scripts/|perf/|\.github/|\.vscode/|\.gitignore$|AGENTS\.md|pyproject\.toml$|src/bin/|src(/.*)?/tests(/|\.rs$))' /tmp/package-list.txt
 
       - name: Package check
         run: cargo package --locked
