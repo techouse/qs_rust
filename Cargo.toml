@@ -47,7 +47,6 @@ time = ["dep:time"]
 
 [dependencies]
 chrono = { version = "0.4.42", optional = true, default-features = true }
-encoding_rs = "0.8.35"
 indexmap = "2.13.1"
 regex = "1.12.2"
 thiserror = "2.0.17"
