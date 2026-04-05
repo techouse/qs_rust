@@ -1,0 +1,7 @@
+---
+# Exclude test sources from Codacy code-pattern analysis.
+# Coverage exclusions must be handled in the coverage tool/report itself.
+exclude_paths:
+  - "tests/**"
+  - "src/**/tests.rs"
+  - "src/**/tests/**"

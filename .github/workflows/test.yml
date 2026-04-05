@@ -9,10 +9,40 @@ on:
       - main
   workflow_call:
 
+defaults:
+  run:
+    shell: bash
+
 permissions:
   contents: read
 
 jobs:
+  msrv-meta:
+    name: Read MSRV
+    runs-on: ubuntu-latest
+    outputs:
+      msrv: ${{ steps.read-msrv.outputs.msrv }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: read-msrv
+        name: Read rust-version from Cargo.toml
+        run: |
+          set -euo pipefail
+          msrv="$(
+            awk -F'"' '
+              /^\[package\]$/ { in_package = 1; next }
+              /^\[/ { in_package = 0 }
+              in_package && /^rust-version[[:space:]]*=/ { print $2; exit }
+            ' Cargo.toml
+          )"
+          if [[ -z "$msrv" ]]; then
+            echo "failed to read package.rust-version from Cargo.toml" >&2
+            exit 1
+          fi
+          echo "msrv=${msrv}" >> "$GITHUB_OUTPUT"
+
   stable:
     name: Stable test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -144,13 +174,16 @@ jobs:
         run: cargo test --locked --test comparison --test parity_decode --test parity_encode
 
   msrv:
-    name: MSRV (1.88)
+    name: MSRV (${{ needs.msrv-meta.outputs.msrv }})
+    needs: msrv-meta
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v6
 
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: ${{ needs.msrv-meta.outputs.msrv }}
 
       - uses: Swatinem/rust-cache@v2
 
@@ -170,8 +203,55 @@ jobs:
 
       - name: Package contents
         run: |
+          set -euo pipefail
           cargo package --locked --list > /tmp/package-list.txt
           ! grep -E '^(fuzz/|tests/|scripts/|perf/|\.github/|\.vscode/|\.gitignore$|AGENTS\.md|pyproject\.toml$|src/bin/|src/.*/tests(/|\.rs$))' /tmp/package-list.txt
 
       - name: Package check
         run: cargo package --locked
+
+  ci-required:
+    name: CI Required
+    if: ${{ always() }}
+    needs:
+      - stable
+      - feature-matrix
+      - quality
+      - parity
+      - msrv
+      - package
+    runs-on: ubuntu-latest
+    env:
+      STABLE_RESULT: ${{ needs.stable.result }}
+      FEATURE_MATRIX_RESULT: ${{ needs.feature-matrix.result }}
+      QUALITY_RESULT: ${{ needs.quality.result }}
+      PARITY_RESULT: ${{ needs.parity.result }}
+      MSRV_RESULT: ${{ needs.msrv.result }}
+      PACKAGE_RESULT: ${{ needs.package.result }}
+
+    steps:
+      - name: Verify required job results
+        run: |
+          set -euo pipefail
+
+          results=(
+            "stable:${STABLE_RESULT}"
+            "feature-matrix:${FEATURE_MATRIX_RESULT}"
+            "quality:${QUALITY_RESULT}"
+            "parity:${PARITY_RESULT}"
+            "msrv:${MSRV_RESULT}"
+            "package:${PACKAGE_RESULT}"
+          )
+
+          failed=0
+          for entry in "${results[@]}"; do
+            job="${entry%%:*}"
+            result="${entry#*:}"
+            echo "${job}: ${result}"
+            if [[ "${result}" != "success" ]]; then
+              echo "::error::${job} finished with result '${result}'"
+              failed=1
+            fi
+          done
+
+          exit "${failed}"
