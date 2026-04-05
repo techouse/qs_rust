@@ -18,6 +18,7 @@ keywords = [
 ]
 categories = ["encoding", "parser-implementations", "web-programming"]
 exclude = [
+    ".codacy.yml",
     ".flake8",
     ".github/**",
     ".gitignore",
