@@ -123,6 +123,8 @@ fn getters_and_builders_cover_encode_specific_configuration() {
 
 #[test]
 fn validate_rejects_impossible_dot_configuration() {
+    // The public builders keep these flags in sync, so construct the invalid
+    // combination directly to exercise the defensive validate() branch.
     let options = EncodeOptions {
         allow_dots: false,
         encode_dot_in_keys: true,
