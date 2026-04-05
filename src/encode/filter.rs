@@ -271,3 +271,6 @@ impl<'a> EncodeFrame<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

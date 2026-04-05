@@ -1,7 +1,8 @@
 pub(super) use super::comma::encode_comma_array_controlled;
 pub(super) use super::{
-    encode, encode_comma_array, encode_key_only_fragment, encoded_dot_escape, percent_encode_bytes,
-    percent_encode_latin1, try_encode_linear_map_chain,
+    encode, encode_comma_array, encode_key_only_fragment, encoded_dot_escape, encoded_scalar_text,
+    percent_encode_bytes, percent_encode_latin1, plain_scalar_text, plain_string_for_comma,
+    scalar_is_null_like, try_encode_linear_map_chain,
 };
 pub(super) use crate::key_path::KeyPathNode;
 pub(super) use crate::options::{
@@ -20,4 +21,5 @@ mod fast_path;
 mod filters;
 mod helpers;
 mod iterative;
+mod scalar;
 mod temporal;
