@@ -19,7 +19,10 @@ use self::scalar::encoded_dot_escape;
 #[cfg(test)]
 use self::comma::encode_comma_array;
 #[cfg(test)]
-use self::scalar::{encode_key_only_fragment, percent_encode_bytes, percent_encode_latin1};
+use self::scalar::{
+    encode_key_only_fragment, encoded_scalar_text, percent_encode_bytes, percent_encode_latin1,
+    plain_scalar_text, plain_string_for_comma, scalar_is_null_like,
+};
 
 /// Encodes a [`Value`] tree into a query string.
 ///

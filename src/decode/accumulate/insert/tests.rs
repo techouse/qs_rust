@@ -165,3 +165,20 @@ fn default_insert_keeps_concrete_storage_until_parsing_is_required() {
     .unwrap();
     assert!(stores_parsed_value_with_compaction(&parsed_values, "a"));
 }
+
+#[test]
+fn default_insert_first_ignores_late_parsed_values_for_existing_concrete_keys() {
+    let mut values = FlatValues::Concrete([("a".to_owned(), scalar("1"))].into());
+    insert_default_value(
+        &mut values,
+        "a".to_owned(),
+        ParsedFlatValue::parsed(Node::Array(vec![Node::scalar(scalar("2"))]), true),
+        &DecodeOptions::new().with_duplicates(Duplicates::First),
+    )
+    .unwrap();
+
+    let FlatValues::Concrete(entries) = values else {
+        panic!("expected concrete values to remain in place")
+    };
+    assert_eq!(entries.get("a"), Some(&scalar("1")));
+}

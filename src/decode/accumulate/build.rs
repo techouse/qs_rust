@@ -326,3 +326,6 @@ pub(super) fn build_custom_value(
 
     Ok(ParsedFlatValue::parsed(value, true))
 }
+
+#[cfg(test)]
+mod tests;

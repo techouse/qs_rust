@@ -348,3 +348,6 @@ impl EncodeOptions {
         self.temporal_serializer.is_some()
     }
 }
+
+#[cfg(test)]
+mod tests;

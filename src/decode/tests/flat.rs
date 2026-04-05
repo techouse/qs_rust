@@ -2,8 +2,9 @@ use std::sync::{Arc, Mutex};
 
 use super::{
     DecodeDecoder, DecodeOptions, Delimiter, FlatValues, IndexMap, Node, ParsedFlatValue, Regex,
-    Value, collect_pair_values, decode, decode_from_pairs_map, finalize_flat,
+    Value, collect_pair_values, decode, decode_from_pairs_map, decode_pairs, finalize_flat,
     parse_query_string_values, scan_structured_keys, stores_concrete_value, stores_parsed_value,
+    value_list_length_for_combine,
 };
 use crate::options::DecodeKind;
 
@@ -200,6 +201,12 @@ fn regex_custom_and_decode_pairs_keep_the_parsed_path() {
 }
 
 #[test]
+fn decode_pairs_returns_empty_for_empty_input() {
+    let decoded = decode_pairs(Vec::<(String, Value)>::new(), &DecodeOptions::new()).unwrap();
+    assert!(decoded.is_empty());
+}
+
+#[test]
 fn public_decode_applies_custom_decoder_to_plain_unescaped_values() {
     let seen = Arc::new(Mutex::new(Vec::new()));
     let capture = Arc::clone(&seen);
@@ -253,4 +260,131 @@ fn public_decode_applies_custom_decoder_to_each_comma_split_value() {
         ]))
     );
     assert_eq!(*seen.lock().unwrap(), vec!["a".to_owned(), "b".to_owned()]);
+}
+
+#[test]
+fn flat_value_helpers_cover_limits_lengths_and_undefined_outputs() {
+    let soft_limited = collect_pair_values(
+        [
+            ("".to_owned(), Value::String("skip".to_owned())),
+            ("a".to_owned(), Value::String("1".to_owned())),
+            ("b".to_owned(), Value::String("2".to_owned())),
+        ],
+        &DecodeOptions::new().with_parameter_limit(1),
+    )
+    .unwrap();
+    assert!(stores_parsed_value(&soft_limited.values, "a"));
+    assert!(!stores_parsed_value(&soft_limited.values, "b"));
+
+    let error = collect_pair_values(
+        [
+            ("a".to_owned(), Value::String("1".to_owned())),
+            ("b".to_owned(), Value::String("2".to_owned())),
+        ],
+        &DecodeOptions::new()
+            .with_parameter_limit(1)
+            .with_throw_on_limit_exceeded(true),
+    )
+    .unwrap_err();
+    assert!(error.is_parameter_limit_exceeded());
+    assert_eq!(error.parameter_limit(), Some(1));
+
+    assert!(matches!(
+        ParsedFlatValue::concrete(Value::String("x".to_owned())).force_parsed(),
+        ParsedFlatValue::Parsed { .. }
+    ));
+    assert!(matches!(
+        ParsedFlatValue::parsed(Node::Undefined, true).force_parsed(),
+        ParsedFlatValue::Parsed {
+            node: Node::Undefined,
+            needs_compaction: true,
+        }
+    ));
+
+    assert_eq!(
+        ParsedFlatValue::concrete(Value::Array(vec![Value::String("x".to_owned())]))
+            .list_length_for_combine(),
+        1
+    );
+    assert_eq!(
+        ParsedFlatValue::concrete(Value::String("x".to_owned())).list_length_for_combine(),
+        1
+    );
+    assert_eq!(
+        ParsedFlatValue::concrete(Value::String(String::new())).list_length_for_combine(),
+        0
+    );
+    assert_eq!(
+        ParsedFlatValue::parsed(
+            Node::OverflowObject {
+                entries: [("1".to_owned(), Node::scalar(Value::String("x".to_owned())))].into(),
+                max_index: 1,
+            },
+            true,
+        )
+        .list_length_for_combine(),
+        2
+    );
+
+    assert_eq!(
+        value_list_length_for_combine(&Value::Object(
+            [("inner".to_owned(), Value::String("x".to_owned()))].into()
+        )),
+        1
+    );
+
+    let finalized = finalize_flat(
+        FlatValues::Parsed(
+            [
+                (
+                    "skip".to_owned(),
+                    ParsedFlatValue::parsed(Node::Undefined, false),
+                ),
+                (
+                    "object".to_owned(),
+                    ParsedFlatValue::concrete(Value::Object(
+                        [("inner".to_owned(), Value::String("x".to_owned()))].into(),
+                    )),
+                ),
+            ]
+            .into(),
+        ),
+        &DecodeOptions::new(),
+    )
+    .unwrap();
+    assert!(!finalized.contains_key("skip"));
+    assert_eq!(
+        finalized.get("object"),
+        Some(&Value::Object(
+            [("inner".to_owned(), Value::String("x".to_owned()))].into()
+        ))
+    );
+}
+
+#[test]
+fn structured_decode_from_pairs_map_merges_existing_roots_with_flat_values() {
+    let values = FlatValues::Parsed(
+        [
+            (
+                "plain[child]".to_owned(),
+                ParsedFlatValue::parsed(Node::scalar(Value::String("nested".to_owned())), true),
+            ),
+            (
+                "plain".to_owned(),
+                ParsedFlatValue::parsed(Node::scalar(Value::String("root".to_owned())), true),
+            ),
+        ]
+        .into(),
+    );
+    let options = DecodeOptions::new();
+    let scan = scan_structured_keys(["plain[child]", "plain"], &options).unwrap();
+
+    let decoded = decode_from_pairs_map(values, &options, &scan).unwrap();
+    assert_eq!(
+        decoded.get("plain"),
+        Some(&Value::Array(vec![
+            Value::Object([("child".to_owned(), Value::String("nested".to_owned()))].into()),
+            Value::String("root".to_owned()),
+        ]))
+    );
 }

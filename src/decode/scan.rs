@@ -9,3 +9,5 @@ pub(super) use self::metadata::{
     contains_ascii_case_insensitive_bytes, hex_value,
 };
 pub(super) use self::parse::parse_query_string_values;
+#[cfg(test)]
+pub(in crate::decode) use self::parts::{scan_default_parts_by_byte_delimiter, scan_string_parts};

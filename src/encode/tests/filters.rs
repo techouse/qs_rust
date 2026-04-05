@@ -213,3 +213,27 @@ fn root_function_filter_non_container_reuses_original_root() {
 
     assert_eq!(encoded, "a=x");
 }
+
+#[test]
+fn root_function_filter_can_replace_the_root_container() {
+    let value = Value::Object([("a".to_owned(), Value::String("x".to_owned()))].into());
+    let encoded = encode(
+        &value,
+        &EncodeOptions::new()
+            .with_encode(false)
+            .with_filter(Some(EncodeFilter::Function(FunctionFilter::new(
+                |prefix, _| {
+                    if prefix.is_empty() {
+                        FilterResult::Replace(Value::Object(
+                            [("b".to_owned(), Value::String("y".to_owned()))].into(),
+                        ))
+                    } else {
+                        FilterResult::Keep
+                    }
+                },
+            )))),
+    )
+    .unwrap();
+
+    assert_eq!(encoded, "b=y");
+}

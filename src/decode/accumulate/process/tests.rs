@@ -303,3 +303,412 @@ fn query_part_wrappers_cover_soft_limits_and_custom_first_duplicates() {
         Node::scalar(scalar("ONE"))
     );
 }
+
+#[test]
+fn default_and_plain_accumulators_cover_remaining_duplicate_promotions() {
+    let last_options = DecodeOptions::new()
+        .with_duplicates(Duplicates::Last)
+        .with_comma(true)
+        .with_list_limit(1);
+    let mut last_values = DefaultAccumulator::direct();
+    let mut token_count = 0usize;
+    let mut has_any_structured_syntax = false;
+    process_scanned_part_default_accumulator(
+        ScannedPart::new("a=1"),
+        Charset::Utf8,
+        &last_options,
+        &mut last_values,
+        &mut token_count,
+        &mut has_any_structured_syntax,
+    )
+    .unwrap();
+    process_scanned_part_default_accumulator(
+        ScannedPart::new("a=2,3"),
+        Charset::Utf8,
+        &last_options,
+        &mut last_values,
+        &mut token_count,
+        &mut has_any_structured_syntax,
+    )
+    .unwrap();
+    assert!(
+        matches!(last_values, DefaultAccumulator::Parsed(entries) if entries.contains_key("a"))
+    );
+
+    let combine_options = DecodeOptions::new()
+        .with_duplicates(Duplicates::Combine)
+        .with_comma(true)
+        .with_list_limit(1);
+    let mut combine_values = DefaultAccumulator::direct();
+    let mut combine_tokens = 0usize;
+    let mut combine_structure = false;
+    process_scanned_part_default_accumulator(
+        ScannedPart::new("a="),
+        Charset::Utf8,
+        &combine_options,
+        &mut combine_values,
+        &mut combine_tokens,
+        &mut combine_structure,
+    )
+    .unwrap();
+    process_scanned_part_default_accumulator(
+        ScannedPart::new("a=2,3"),
+        Charset::Utf8,
+        &combine_options,
+        &mut combine_values,
+        &mut combine_tokens,
+        &mut combine_structure,
+    )
+    .unwrap();
+    assert!(
+        matches!(combine_values, DefaultAccumulator::Parsed(entries) if entries.contains_key("a"))
+    );
+
+    let mut plain_values = DefaultAccumulator::direct();
+    let mut plain_tokens = 0usize;
+    process_plain_part_default(
+        "a=1",
+        Some(1),
+        &DecodeOptions::new().with_duplicates(Duplicates::Last),
+        &mut plain_values,
+        &mut plain_tokens,
+    )
+    .unwrap();
+    process_plain_part_default(
+        "a=2",
+        Some(1),
+        &DecodeOptions::new().with_duplicates(Duplicates::Last),
+        &mut plain_values,
+        &mut plain_tokens,
+    )
+    .unwrap();
+    let DefaultAccumulator::Direct(entries) = &plain_values else {
+        panic!("expected direct plain storage")
+    };
+    assert_eq!(entries.get("a"), Some(&scalar("2")));
+
+    let mut promoted_plain_values = DefaultAccumulator::direct();
+    let mut promoted_plain_tokens = 0usize;
+    let promote_options = DecodeOptions::new()
+        .with_duplicates(Duplicates::Combine)
+        .with_list_limit(1);
+    process_plain_part_default(
+        "a=",
+        Some(1),
+        &promote_options,
+        &mut promoted_plain_values,
+        &mut promoted_plain_tokens,
+    )
+    .unwrap();
+    process_plain_part_default(
+        "a=tail",
+        Some(1),
+        &promote_options,
+        &mut promoted_plain_values,
+        &mut promoted_plain_tokens,
+    )
+    .unwrap();
+    assert!(matches!(
+        promoted_plain_values,
+        DefaultAccumulator::Parsed(entries) if entries.contains_key("a")
+    ));
+
+    let mut parsed_plain_values = DefaultAccumulator::Parsed(Default::default());
+    let mut parsed_plain_tokens = 0usize;
+    process_plain_part_default(
+        "b=1",
+        Some(1),
+        &DecodeOptions::new(),
+        &mut parsed_plain_values,
+        &mut parsed_plain_tokens,
+    )
+    .unwrap();
+    let DefaultAccumulator::Parsed(entries) = parsed_plain_values else {
+        panic!("expected parsed plain storage")
+    };
+    assert_eq!(
+        entries.get("b").unwrap().clone().into_node(),
+        Node::scalar(scalar("1"))
+    );
+}
+
+#[test]
+fn prefer_concrete_and_custom_paths_cover_remaining_storage_modes() {
+    let last_options = DecodeOptions::new().with_duplicates(Duplicates::Last);
+    let mut prefer_concrete = FlatValues::Concrete([("a".to_owned(), scalar("1"))].into());
+    let mut token_count = 0usize;
+    let mut has_any_structured_syntax = false;
+    process_scanned_part_default_with_mode(
+        ScannedPart::new("a=2"),
+        Charset::Utf8,
+        &last_options,
+        &mut prefer_concrete,
+        &mut token_count,
+        &mut has_any_structured_syntax,
+        DefaultStorageMode::PreferConcrete,
+    )
+    .unwrap();
+    let FlatValues::Concrete(entries) = &prefer_concrete else {
+        panic!("expected concrete values")
+    };
+    assert_eq!(entries.get("a"), Some(&scalar("2")));
+
+    let combine_options = DecodeOptions::new()
+        .with_duplicates(Duplicates::Combine)
+        .with_comma(true)
+        .with_list_limit(1);
+    let mut promoted =
+        FlatValues::Concrete([("a".to_owned(), scalar(String::new().as_str()))].into());
+    let mut promote_tokens = 0usize;
+    let mut promote_structure = false;
+    process_scanned_part_default_with_mode(
+        ScannedPart::new("a=1,2"),
+        Charset::Utf8,
+        &combine_options,
+        &mut promoted,
+        &mut promote_tokens,
+        &mut promote_structure,
+        DefaultStorageMode::PreferConcrete,
+    )
+    .unwrap();
+    assert!(stores_parsed_value(&promoted, "a"));
+
+    let decoder = DecodeDecoder::new(|input, _charset, kind| match kind {
+        DecodeKind::Key => input.to_owned(),
+        DecodeKind::Value => input.to_ascii_uppercase(),
+    });
+    let custom_options = DecodeOptions::new()
+        .with_charset_sentinel(true)
+        .with_comma(true)
+        .with_duplicates(Duplicates::Combine)
+        .with_decoder(Some(decoder));
+    let mut custom_values = FlatValues::parsed();
+    let mut custom_tokens = 0usize;
+    let mut custom_structure = false;
+    process_scanned_part_custom(
+        ScannedPart::new("utf8=%E2%9C%93"),
+        Charset::Utf8,
+        &custom_options,
+        &mut custom_values,
+        &mut custom_tokens,
+        &mut custom_structure,
+    )
+    .unwrap();
+    assert!(custom_values.is_empty());
+    assert_eq!(custom_tokens, 1);
+
+    process_scanned_part_custom(
+        ScannedPart::new("letters=a"),
+        Charset::Utf8,
+        &custom_options,
+        &mut custom_values,
+        &mut custom_tokens,
+        &mut custom_structure,
+    )
+    .unwrap();
+    process_scanned_part_custom(
+        ScannedPart::new("letters=b,c"),
+        Charset::Utf8,
+        &custom_options,
+        &mut custom_values,
+        &mut custom_tokens,
+        &mut custom_structure,
+    )
+    .unwrap();
+    let FlatValues::Parsed(entries) = custom_values else {
+        panic!("expected parsed custom values")
+    };
+    assert_eq!(entries.get("letters").unwrap().list_length_for_combine(), 3);
+
+    let mut already_structured = true;
+    update_structured_syntax_flag(
+        ScannedPart::new("flat=1"),
+        "flat",
+        &DecodeOptions::new(),
+        &mut already_structured,
+    );
+    assert!(already_structured);
+}
+
+#[test]
+fn duplicate_modes_cover_remaining_default_and_custom_processing_paths() {
+    let direct_last_options = DecodeOptions::new()
+        .with_duplicates(Duplicates::Last)
+        .with_comma(true)
+        .with_list_limit(1);
+    let mut direct_last = DefaultAccumulator::direct();
+    let mut direct_last_tokens = 0usize;
+    let mut direct_last_structure = false;
+    process_scanned_part_default_accumulator(
+        ScannedPart::new("a=1"),
+        Charset::Utf8,
+        &direct_last_options,
+        &mut direct_last,
+        &mut direct_last_tokens,
+        &mut direct_last_structure,
+    )
+    .unwrap();
+    process_scanned_part_default_accumulator(
+        ScannedPart::new("a=2,3"),
+        Charset::Utf8,
+        &direct_last_options,
+        &mut direct_last,
+        &mut direct_last_tokens,
+        &mut direct_last_structure,
+    )
+    .unwrap();
+    assert!(matches!(
+        direct_last,
+        DefaultAccumulator::Parsed(entries) if entries.contains_key("a")
+    ));
+
+    let direct_combine_options = DecodeOptions::new()
+        .with_duplicates(Duplicates::Combine)
+        .with_comma(true)
+        .with_list_limit(8);
+    let mut direct_combine = DefaultAccumulator::direct();
+    let mut direct_combine_tokens = 0usize;
+    let mut direct_combine_structure = false;
+    process_scanned_part_default_accumulator(
+        ScannedPart::new("a=seed"),
+        Charset::Utf8,
+        &direct_combine_options,
+        &mut direct_combine,
+        &mut direct_combine_tokens,
+        &mut direct_combine_structure,
+    )
+    .unwrap();
+    process_scanned_part_default_accumulator(
+        ScannedPart::new("a=2,3"),
+        Charset::Utf8,
+        &direct_combine_options,
+        &mut direct_combine,
+        &mut direct_combine_tokens,
+        &mut direct_combine_structure,
+    )
+    .unwrap();
+    assert!(matches!(direct_combine, DefaultAccumulator::Direct(_)));
+
+    let mut parsed_default = DefaultAccumulator::Parsed(Default::default());
+    let mut parsed_default_tokens = 0usize;
+    let mut parsed_default_structure = false;
+    process_scanned_part_default_accumulator(
+        ScannedPart::new("a=1,2"),
+        Charset::Utf8,
+        &DecodeOptions::new()
+            .with_duplicates(Duplicates::Last)
+            .with_comma(true),
+        &mut parsed_default,
+        &mut parsed_default_tokens,
+        &mut parsed_default_structure,
+    )
+    .unwrap();
+    assert!(matches!(
+        parsed_default,
+        DefaultAccumulator::Parsed(entries) if entries.contains_key("a")
+    ));
+
+    let mut first_concrete = FlatValues::Concrete([("a".to_owned(), scalar("1"))].into());
+    let mut first_tokens = 0usize;
+    let mut first_structure = false;
+    process_scanned_part_default_with_mode(
+        ScannedPart::new("a=ignored"),
+        Charset::Utf8,
+        &DecodeOptions::new().with_duplicates(Duplicates::First),
+        &mut first_concrete,
+        &mut first_tokens,
+        &mut first_structure,
+        DefaultStorageMode::PreferConcrete,
+    )
+    .unwrap();
+    let FlatValues::Concrete(first_entries) = &first_concrete else {
+        panic!("expected concrete values to stay unchanged")
+    };
+    assert_eq!(first_entries.get("a"), Some(&scalar("1")));
+
+    let mut prefer_last = FlatValues::Concrete([("a".to_owned(), scalar("1"))].into());
+    let mut prefer_last_tokens = 0usize;
+    let mut prefer_last_structure = false;
+    process_scanned_part_default_with_mode(
+        ScannedPart::new("a=2,3"),
+        Charset::Utf8,
+        &direct_last_options,
+        &mut prefer_last,
+        &mut prefer_last_tokens,
+        &mut prefer_last_structure,
+        DefaultStorageMode::PreferConcrete,
+    )
+    .unwrap();
+    assert!(stores_parsed_value(&prefer_last, "a"));
+
+    let mut prefer_combine = FlatValues::Concrete([("a".to_owned(), scalar("1"))].into());
+    let mut prefer_combine_tokens = 0usize;
+    let mut prefer_combine_structure = false;
+    process_scanned_part_default_with_mode(
+        ScannedPart::new("a=2,3"),
+        Charset::Utf8,
+        &DecodeOptions::new()
+            .with_duplicates(Duplicates::Combine)
+            .with_comma(true)
+            .with_list_limit(1),
+        &mut prefer_combine,
+        &mut prefer_combine_tokens,
+        &mut prefer_combine_structure,
+        DefaultStorageMode::PreferConcrete,
+    )
+    .unwrap();
+    assert!(stores_parsed_value(&prefer_combine, "a"));
+
+    let mut custom_last = FlatValues::parsed();
+    let mut custom_last_tokens = 0usize;
+    let mut custom_last_structure = false;
+    let custom_last_options = DecodeOptions::new()
+        .with_duplicates(Duplicates::Last)
+        .with_decoder(Some(DecodeDecoder::new(
+            |input, _charset, kind| match kind {
+                DecodeKind::Key => input.to_owned(),
+                DecodeKind::Value => input.to_ascii_uppercase(),
+            },
+        )));
+    process_scanned_part_custom(
+        ScannedPart::new("name=one"),
+        Charset::Utf8,
+        &custom_last_options,
+        &mut custom_last,
+        &mut custom_last_tokens,
+        &mut custom_last_structure,
+    )
+    .unwrap();
+    process_scanned_part_custom(
+        ScannedPart::new("name=two"),
+        Charset::Utf8,
+        &custom_last_options,
+        &mut custom_last,
+        &mut custom_last_tokens,
+        &mut custom_last_structure,
+    )
+    .unwrap();
+    let FlatValues::Parsed(custom_last_entries) = custom_last else {
+        panic!("expected parsed custom values")
+    };
+    assert_eq!(
+        custom_last_entries.get("name").unwrap().clone().into_node(),
+        Node::scalar(scalar("TWO"))
+    );
+}
+
+#[test]
+fn hard_limit_duplicate_combine_errors_propagate_from_direct_combine_helpers() {
+    let options = DecodeOptions::new()
+        .with_duplicates(Duplicates::Combine)
+        .with_list_limit(1)
+        .with_throw_on_limit_exceeded(true);
+    let mut values = DefaultAccumulator::direct();
+    let mut token_count = 0usize;
+
+    process_plain_part_default("a=1", Some(1), &options, &mut values, &mut token_count).unwrap();
+    let error = process_plain_part_default("a=2", Some(1), &options, &mut values, &mut token_count)
+        .unwrap_err();
+    assert!(error.is_list_limit_exceeded());
+    assert_eq!(error.list_limit(), Some(1));
+}

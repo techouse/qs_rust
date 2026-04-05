@@ -191,7 +191,7 @@ fn key_token_text(key: &str, options: &EncodeOptions) -> String {
     key.to_owned()
 }
 
-fn plain_scalar_text(value: &Value, options: &EncodeOptions) -> Option<String> {
+pub(super) fn plain_scalar_text(value: &Value, options: &EncodeOptions) -> Option<String> {
     match value {
         Value::Null => None,
         Value::Bool(boolean) => Some(boolean.to_string()),
