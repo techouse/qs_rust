@@ -1,7 +1,9 @@
 //! Opt-in serde field helpers for preserving temporal leaves.
 
+#[cfg(any(feature = "chrono", feature = "time"))]
 use ::serde::Serialize;
 
+#[cfg(any(feature = "chrono", feature = "time"))]
 use crate::temporal::TemporalValue;
 
 pub(super) const TEMPORAL_MARKER_NAME: &str = "__qs_rust_temporal__";
