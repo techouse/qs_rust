@@ -9,7 +9,7 @@ use super::super::accumulate::{
 use super::super::flat::DefaultAccumulator;
 use super::metadata::ScannedPart;
 
-pub(super) fn scan_string_parts<F>(
+pub(in crate::decode) fn scan_string_parts<F>(
     input: &str,
     delimiter: &str,
     mut visit: F,
@@ -66,7 +66,7 @@ where
     Ok(())
 }
 
-pub(super) fn scan_default_parts_by_byte_delimiter(
+pub(in crate::decode) fn scan_default_parts_by_byte_delimiter(
     input: &str,
     delimiter: u8,
     effective_charset: Charset,

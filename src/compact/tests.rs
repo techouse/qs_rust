@@ -1,4 +1,4 @@
-use super::{compact, node_to_value};
+use super::{compact, node_to_object, node_to_value};
 use crate::internal::node::Node;
 use crate::value::Value;
 
@@ -100,5 +100,24 @@ fn compact_preserves_named_overflow_keys_while_dropping_undefined_children() {
             ]
             .into()
         )
+    );
+}
+
+#[test]
+fn node_conversion_helpers_cover_arrays_scalars_and_undefined_values() {
+    assert_eq!(node_to_value(Node::Undefined), Value::Null);
+
+    assert_eq!(
+        node_to_object(Node::Array(vec![scalar("a"), Node::Undefined])),
+        [
+            ("0".to_owned(), Value::String("a".to_owned())),
+            ("1".to_owned(), Value::Null),
+        ]
+        .into()
+    );
+
+    assert_eq!(
+        node_to_object(scalar("root")),
+        [("0".to_owned(), Value::String("root".to_owned()))].into()
     );
 }

@@ -20,14 +20,13 @@ use self::structured::decode_from_pairs_map;
 #[cfg(test)]
 use self::accumulate::combine_with_limit;
 #[cfg(test)]
-use self::flat::{FlatValues, ParsedFlatValue};
+use self::flat::{DefaultAccumulator, FlatValues, ParsedFlatValue, value_list_length_for_combine};
 #[cfg(test)]
-use self::keys::{dot_to_bracket_top_level, find_recoverable_balanced_open};
+use self::keys::{dot_to_bracket_top_level, find_recoverable_balanced_open, parse_keys};
 #[cfg(test)]
-use self::scalar::{decode_scalar, interpret_numeric_entities};
-#[cfg(test)]
-use self::scan::ScannedPart;
-
+use self::scalar::{
+    decode_component, decode_scalar, interpret_numeric_entities, interpret_numeric_entities_in_node,
+};
 /// Decodes a query string into an ordered object map.
 ///
 /// The result preserves flat outputs when the input contains no structured key

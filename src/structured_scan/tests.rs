@@ -38,3 +38,12 @@ fn leading_structured_root_preserves_noncanonical_numeric_keys() {
         "01"
     );
 }
+
+#[test]
+fn structured_scan_helpers_cover_plain_percent_inputs_and_empty_segments() {
+    assert_eq!(first_structured_split_index("plain%20text", true), None);
+    assert_eq!(
+        leading_structured_root("", &DecodeOptions::default()).unwrap(),
+        ""
+    );
+}

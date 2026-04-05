@@ -1,7 +1,9 @@
 use super::{
-    Charset, DecodeOptions, Delimiter, Regex, ScannedPart, Value, decode, dot_to_bracket_top_level,
-    find_recoverable_balanced_open, parse_query_string_values, split_key_into_segments,
+    Charset, DecodeDecoder, DecodeOptions, Delimiter, Regex, ScannedPart, Value, decode,
+    dot_to_bracket_top_level, find_recoverable_balanced_open, parse_query_string_values,
+    split_key_into_segments,
 };
+use crate::options::DecodeKind;
 
 #[test]
 fn split_key_into_segments_handles_dots_and_unterminated_groups() {
@@ -111,6 +113,12 @@ fn scanned_part_metadata_tracks_default_fast_path_flags() {
     let numeric_entity = ScannedPart::new("a=%26%239786%3B");
     assert!(numeric_entity.value_has_escape_or_plus);
     assert!(numeric_entity.value_has_numeric_entity_candidate);
+
+    let repartitioned = ScannedPart::new("a+%5D=x");
+    assert!(repartitioned.key_has_escape_or_plus);
+
+    let hash_numeric_entity = ScannedPart::new("a=#123");
+    assert!(hash_numeric_entity.value_has_numeric_entity_candidate);
 }
 
 #[test]
@@ -136,6 +144,63 @@ fn parse_query_string_values_skip_adjacent_empty_segments_for_string_and_regex_d
             ("c".to_owned(), Value::String("3".to_owned()))
         ]
         .into()
+    );
+}
+
+#[test]
+fn charset_detection_and_regex_custom_paths_cover_remaining_scanner_edges() {
+    let custom_regex = DecodeOptions::new()
+        .with_delimiter(Delimiter::Regex(Regex::new("[&;]").unwrap()))
+        .with_decoder(Some(DecodeDecoder::new(
+            |input, _charset, kind| match kind {
+                DecodeKind::Key => input.to_owned(),
+                DecodeKind::Value => input.to_ascii_uppercase(),
+            },
+        )));
+    let parsed = parse_query_string_values("name=one;other=two", &custom_regex).unwrap();
+    assert_eq!(
+        super::finalize_flat(parsed.values, &custom_regex).unwrap(),
+        [
+            ("name".to_owned(), Value::String("ONE".to_owned())),
+            ("other".to_owned(), Value::String("TWO".to_owned())),
+        ]
+        .into()
+    );
+
+    let empty_delimiter = parse_query_string_values(
+        "utf8=%E2%9C%93",
+        &DecodeOptions::new()
+            .with_charset_sentinel(true)
+            .with_delimiter(Delimiter::String(String::new())),
+    )
+    .unwrap_err();
+    assert!(matches!(
+        empty_delimiter,
+        crate::error::DecodeError::EmptyDelimiter
+    ));
+
+    let trailing_single = decode(
+        "utf8=%E2%9C%93&a=1&",
+        &DecodeOptions::new()
+            .with_charset(Charset::Iso88591)
+            .with_charset_sentinel(true),
+    )
+    .unwrap();
+    assert_eq!(
+        trailing_single.get("a"),
+        Some(&Value::String("1".to_owned()))
+    );
+
+    let trailing_multi = decode(
+        "a=1&&",
+        &DecodeOptions::new()
+            .with_charset_sentinel(true)
+            .with_delimiter(Delimiter::String("&&".to_owned())),
+    )
+    .unwrap();
+    assert_eq!(
+        trailing_multi.get("a"),
+        Some(&Value::String("1".to_owned()))
     );
 }
 
@@ -247,5 +312,40 @@ fn single_byte_plain_fast_path_preserves_featureful_fallback_behavior() {
     assert_eq!(
         sentinel,
         [("a".to_owned(), Value::String("1".to_owned()))].into()
+    );
+}
+
+#[test]
+fn regex_custom_parser_and_multi_byte_sentinel_scan_cover_remaining_paths() {
+    let regex_options = DecodeOptions::new()
+        .with_delimiter(Delimiter::Regex(Regex::new("[;|]").unwrap()))
+        .with_decoder(Some(super::DecodeDecoder::new(
+            |input, _charset, kind| match kind {
+                DecodeKind::Value => input.to_ascii_uppercase(),
+                DecodeKind::Key => input.to_owned(),
+            },
+        )));
+    let parsed = parse_query_string_values("a=one;b=two", &regex_options).unwrap();
+    assert_eq!(
+        super::finalize_flat(parsed.values, &regex_options).unwrap(),
+        [
+            ("a".to_owned(), Value::String("ONE".to_owned())),
+            ("b".to_owned(), Value::String("TWO".to_owned())),
+        ]
+        .into()
+    );
+
+    let multi_byte_options = DecodeOptions::new()
+        .with_delimiter(Delimiter::String("&&".to_owned()))
+        .with_charset(Charset::Iso88591)
+        .with_charset_sentinel(true);
+    let parsed = parse_query_string_values("a=1&&b=2", &multi_byte_options).unwrap();
+    assert_eq!(
+        super::finalize_flat(parsed.values, &multi_byte_options).unwrap(),
+        [
+            ("a".to_owned(), Value::String("1".to_owned())),
+            ("b".to_owned(), Value::String("2".to_owned())),
+        ]
+        .into()
     );
 }

@@ -30,3 +30,16 @@ fn dot_encoded_cache_reuses_nodes_when_segments_have_no_dots() {
     assert_eq!(encoded_once.materialize(), "user%2Ename[first%2Elast][0]");
     assert!(Rc::ptr_eq(&encoded_once.0, &encoded_twice.0));
 }
+
+#[test]
+fn append_and_dot_encoding_helpers_reuse_nodes_when_nothing_changes() {
+    let root = KeyPathNode::from_raw("user");
+    let same = root.append_dot_component("");
+    assert!(Rc::ptr_eq(&root.0, &same.0));
+
+    let nested = root.append_bracketed_component("name");
+    assert_eq!(nested.materialize(), "user[name]");
+
+    let encoded = nested.as_dot_encoded("%2E");
+    assert!(Rc::ptr_eq(&nested.0, &encoded.0));
+}
