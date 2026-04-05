@@ -1,7 +1,7 @@
 [package]
 authors = ["Klemen Tusar <techouse@gmail.com>"]
 name = "qs_rust"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 rust-version = "1.88"
 description = "A query string encoding and decoding library for Rust. Ported from qs for JavaScript."
