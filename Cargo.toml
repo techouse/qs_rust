@@ -48,7 +48,7 @@ time = ["dep:time"]
 
 [dependencies]
 chrono = { version = "0.4.42", optional = true, default-features = true }
-indexmap = "2.13.1"
+indexmap = "2.14.0"
 regex = "1.12.2"
 thiserror = "2.0.17"
 serde = { version = "1.0.228", features = ["derive"], optional = true }
