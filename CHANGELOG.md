@@ -1,3 +1,9 @@
+## 1.0.2
+
+* [CHORE] update `rand` from 0.9.2 to 0.9.4
+* [CHORE] bump `indexmap` from 2.13.1 to 2.14.0
+* [CHORE] bump Node `qs` from 6.15.0 to 6.15.1 in
+
 ## 1.0.1
 
 * [FIX] remove `serde` temporal helper warnings by cfg-gating imports that are only needed when `chrono` or `time` support is enabled
