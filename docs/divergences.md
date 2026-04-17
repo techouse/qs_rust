@@ -1,6 +1,6 @@
 # Divergence Matrix
 
-`qs_rust` still uses Node `qs` `6.15.0` as the baseline for shared public query-string semantics, but it now tracks sibling-port behavior explicitly in three buckets:
+`qs_rust` still uses Node `qs` `6.15.1` as the baseline for shared public query-string semantics, but it now tracks sibling-port behavior explicitly in three buckets:
 
 - `shared-port default`: Rust adopts the sibling-port extension or fix directly.
 - `Node-compatible default`: Rust intentionally keeps Node behavior even when another port diverges.
@@ -25,7 +25,7 @@
 
 ## Notes
 
-- For `1.x`, Node `qs` `6.15.0` remains the semantic baseline for shared public behavior, while the C# port remains the architectural reference for internal design choices. Other sibling ports are informative only.
+- For `1.x`, Node `qs` `6.15.1` remains the semantic baseline for shared public behavior, while the C# port remains the architectural reference for internal design choices. Other sibling ports are informative only.
 - The public contract for `1.x` is the re-exported surface from `src/lib.rs` together with the intentional boundaries recorded in this matrix and the support/stability policy in `README.md`.
 - Optional features (`serde`, `chrono`, and `time`) follow the same MSRV and platform support policy as the core crate.
 - Rust does not silently inherit every sibling-port divergence. When sibling ports disagree and there is no clear shared correction, the crate stays Node-compatible by default.
