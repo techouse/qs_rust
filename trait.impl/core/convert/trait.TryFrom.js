@@ -1,0 +1,9 @@
+(function() {
+    const implementors = Object.fromEntries([["qs_rust",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.95.0/core/convert/trait.TryFrom.html\" title=\"trait core::convert::TryFrom\">TryFrom</a>&lt;&amp;<a class=\"enum\" href=\"qs_rust/enum.TemporalValue.html\" title=\"enum qs_rust::TemporalValue\">TemporalValue</a>&gt; for <a class=\"struct\" href=\"https://docs.rs/chrono/latest/chrono/datetime/struct.DateTime.html\" title=\"struct chrono::datetime::DateTime\">DateTime</a>&lt;<a class=\"struct\" href=\"https://docs.rs/chrono/latest/chrono/offset/fixed/struct.FixedOffset.html\" title=\"struct chrono::offset::fixed::FixedOffset\">FixedOffset</a>&gt;",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.95.0/core/convert/trait.TryFrom.html\" title=\"trait core::convert::TryFrom\">TryFrom</a>&lt;&amp;<a class=\"enum\" href=\"qs_rust/enum.TemporalValue.html\" title=\"enum qs_rust::TemporalValue\">TemporalValue</a>&gt; for <a class=\"struct\" href=\"https://docs.rs/chrono/latest/chrono/naive/datetime/struct.NaiveDateTime.html\" title=\"struct chrono::naive::datetime::NaiveDateTime\">NaiveDateTime</a>",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.95.0/core/convert/trait.TryFrom.html\" title=\"trait core::convert::TryFrom\">TryFrom</a>&lt;&amp;<a class=\"enum\" href=\"qs_rust/enum.TemporalValue.html\" title=\"enum qs_rust::TemporalValue\">TemporalValue</a>&gt; for OffsetDateTime",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.95.0/core/convert/trait.TryFrom.html\" title=\"trait core::convert::TryFrom\">TryFrom</a>&lt;&amp;<a class=\"enum\" href=\"qs_rust/enum.TemporalValue.html\" title=\"enum qs_rust::TemporalValue\">TemporalValue</a>&gt; for PrimitiveDateTime",0]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":59,"fragment_lengths":[1702]}
