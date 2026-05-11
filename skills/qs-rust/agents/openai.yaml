@@ -1,0 +1,4 @@
+interface:
+  display_name: "qs-rust"
+  short_description: "Encode and decode nested Rust query strings"
+  default_prompt: "Use $qs-rust to parse or build a Rust query string with qs_rust."
