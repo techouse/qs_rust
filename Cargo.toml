@@ -33,6 +33,7 @@ exclude = [
     "perf/**",
     "pyproject.toml",
     "scripts/**",
+    "skills/**",
     "src/**/tests/**",
     "src/**/tests.rs",
     "src/bin/**",
