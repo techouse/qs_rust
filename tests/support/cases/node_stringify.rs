@@ -327,6 +327,83 @@ pub(crate) fn cases() -> Vec<EncodeParityCase> {
             CaseMeta::new(
                 "node-qs",
                 "stringify.js",
+                "percent-encoded open bracket text in top-level key",
+                "encoded brackets",
+                true,
+            ),
+            obj(vec![("a%5Bb", s("c"))]),
+            EncodeOptions::new(),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "percent-encoded close bracket text in top-level key",
+                "encoded brackets",
+                true,
+            ),
+            obj(vec![("a%5Db", s("c"))]),
+            EncodeOptions::new(),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "double-encoded open bracket text in top-level key",
+                "encoded brackets",
+                true,
+            ),
+            obj(vec![("a%255Bb", s("c"))]),
+            EncodeOptions::new(),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "double-encoded close bracket text in top-level key",
+                "encoded brackets",
+                true,
+            ),
+            obj(vec![("a%255Db", s("c"))]),
+            EncodeOptions::new(),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "percent-encoded open bracket text in nested key",
+                "encoded brackets",
+                true,
+            ),
+            obj(vec![("a", obj(vec![("b%5Bc", s("d"))]))]),
+            EncodeOptions::new(),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "double-encoded open bracket text in nested key",
+                "encoded brackets",
+                true,
+            ),
+            obj(vec![("a", obj(vec![("b%255Bc", s("d"))]))]),
+            EncodeOptions::new(),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "mixed encoded bracket text in top-level key",
+                "encoded brackets",
+                true,
+            ),
+            obj(vec![("a%5B%255Bb", s("c"))]),
+            EncodeOptions::new(),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
                 "encode values only",
                 "encoding",
                 true,
