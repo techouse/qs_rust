@@ -112,10 +112,6 @@ pub(super) fn encode_comma_array_controlled(
         return Vec::new();
     }
 
-    if options.comma_compact_nulls && elements.is_empty() {
-        return Vec::new();
-    }
-
     if elements.is_empty() {
         return Vec::new();
     }
