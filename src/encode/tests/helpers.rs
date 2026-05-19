@@ -222,6 +222,25 @@ fn controlled_comma_arrays_can_compact_or_strictify_nulls() {
         ),
         vec!["letters[]".to_owned()]
     );
+
+    let mixed_items = [Value::Null, Value::String(String::new())];
+    assert_eq!(
+        encode_comma_array_controlled(
+            &mixed_items,
+            &path,
+            &EncodeOptions::new()
+                .with_encode(false)
+                .with_list_format(ListFormat::Comma)
+                .with_comma_compact_nulls(true)
+                .with_strict_null_handling(true)
+                .with_comma_round_trip(true)
+                .with_whitelist(Some(vec![
+                    WhitelistSelector::Index(0),
+                    WhitelistSelector::Index(1),
+                ])),
+        ),
+        vec!["letters[]".to_owned()]
+    );
 }
 
 #[test]
