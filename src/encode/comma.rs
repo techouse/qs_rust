@@ -19,8 +19,7 @@ pub(super) fn encode_comma_array(
     let mut elements = Vec::new();
     let mut encoded_elements = Vec::new();
     for item in items {
-        if scalar_is_null_like(item, options) && (options.skip_nulls || options.comma_compact_nulls)
-        {
+        if scalar_is_null_like(item, options) && options.comma_compact_nulls {
             continue;
         }
         let plain = plain_string_for_comma(item, options);
@@ -28,10 +27,6 @@ pub(super) fn encode_comma_array(
             encoded_elements.push(encode_comma_value_item(item, &plain, options));
         }
         elements.push(plain);
-    }
-
-    if options.comma_compact_nulls && elements.is_empty() {
-        return Vec::new();
     }
 
     if elements.is_empty() {
@@ -42,14 +37,7 @@ pub(super) fn encode_comma_array(
             }
             return Vec::new();
         }
-        if options.strict_null_handling {
-            let key_path = if options.comma_round_trip && items.len() == 1 {
-                path.append_empty_list_suffix()
-            } else {
-                path.clone()
-            };
-            return vec![finalize_key_only_fragment(key_path.materialize(), options)];
-        }
+        return Vec::new();
     }
 
     let key_path = if options.comma_round_trip && elements.len() == 1 {
@@ -59,6 +47,16 @@ pub(super) fn encode_comma_array(
     };
     let key = finalize_key_path(key_path.materialize(), options);
     let joined = elements.join(",");
+    if joined.is_empty() {
+        if options.skip_nulls {
+            return Vec::new();
+        }
+        if options.strict_null_handling {
+            return vec![finalize_key_only_fragment(key_path.materialize(), options)];
+        }
+        return vec![format!("{key}=")];
+    }
+
     let value = if options.encode_values_only {
         encoded_elements.join(",")
     } else {
@@ -99,9 +97,7 @@ pub(super) fn encode_comma_array_controlled(
         };
 
         kept_items += 1;
-        if scalar_is_null_like(value, options)
-            && (options.skip_nulls || options.comma_compact_nulls)
-        {
+        if scalar_is_null_like(value, options) && options.comma_compact_nulls {
             continue;
         }
 
@@ -120,13 +116,8 @@ pub(super) fn encode_comma_array_controlled(
         return Vec::new();
     }
 
-    if elements.is_empty() && options.strict_null_handling {
-        let key_path = if options.comma_round_trip && kept_items == 1 {
-            path.append_empty_list_suffix()
-        } else {
-            path.clone()
-        };
-        return vec![finalize_key_only_fragment(key_path.materialize(), options)];
+    if elements.is_empty() {
+        return Vec::new();
     }
 
     let key_path = if options.comma_round_trip && elements.len() == 1 {
@@ -136,6 +127,22 @@ pub(super) fn encode_comma_array_controlled(
     };
     let key = finalize_key_path(key_path.materialize(), options);
     let joined = elements.join(",");
+    if joined.is_empty() {
+        if options.skip_nulls {
+            return Vec::new();
+        }
+        let key_path = if options.comma_round_trip && kept_items == 1 {
+            path.append_empty_list_suffix()
+        } else {
+            path.clone()
+        };
+        if options.strict_null_handling {
+            return vec![finalize_key_only_fragment(key_path.materialize(), options)];
+        }
+        let key = finalize_key_path(key_path.materialize(), options);
+        return vec![format!("{key}=")];
+    }
+
     let value = if options.encode_values_only {
         encoded_elements.join(",")
     } else {
@@ -145,6 +152,10 @@ pub(super) fn encode_comma_array_controlled(
 }
 
 fn encode_comma_value_item(value: &Value, plain: &str, options: &EncodeOptions) -> String {
+    if scalar_is_null_like(value, options) {
+        return String::new();
+    }
+
     if matches!(value, Value::Temporal(_)) {
         return encode_string_or_raw(
             &encoded_scalar_text(value, options)

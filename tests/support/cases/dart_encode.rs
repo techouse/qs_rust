@@ -8,7 +8,7 @@ pub(crate) fn cases() -> Vec<EncodeParityCase> {
             CaseMeta::new(
                 "dart-qsdart",
                 "encode_test.dart",
-                "strict null handling keeps percent-escaped spaces in key-only RFC1738 output",
+                "strict null handling applies RFC1738 formatting to key-only output",
                 "null handling",
                 true,
             ),

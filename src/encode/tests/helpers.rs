@@ -84,23 +84,61 @@ fn comma_arrays_emit_empty_list_suffixes_only_when_allowed() {
 }
 
 #[test]
-fn comma_arrays_emit_key_only_fragments_for_skipped_nulls() {
+fn comma_arrays_follow_node_null_joining_rules() {
     let path = super::KeyPathNode::from_raw("letters");
     let base = EncodeOptions::new()
         .with_encode(false)
-        .with_list_format(ListFormat::Comma)
-        .with_skip_nulls(true)
-        .with_strict_null_handling(true);
+        .with_list_format(ListFormat::Comma);
 
     assert_eq!(
-        encode_comma_array(&[Value::Null, Value::Null], &path, &base),
+        encode_comma_array(
+            &[Value::Null, Value::String("x".to_owned())],
+            &path,
+            &base
+                .clone()
+                .with_skip_nulls(true)
+                .with_strict_null_handling(true),
+        ),
+        vec!["letters=,x".to_owned()]
+    );
+    assert_eq!(
+        encode_comma_array(
+            &[Value::Null, Value::Null],
+            &path,
+            &base
+                .clone()
+                .with_skip_nulls(true)
+                .with_strict_null_handling(true),
+        ),
+        vec!["letters=,".to_owned()]
+    );
+    assert_eq!(
+        encode_comma_array(
+            &[Value::Null],
+            &path,
+            &base
+                .clone()
+                .with_skip_nulls(true)
+                .with_strict_null_handling(true),
+        ),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        encode_comma_array(
+            &[Value::Null],
+            &path,
+            &base.clone().with_strict_null_handling(true),
+        ),
         vec!["letters".to_owned()]
     );
     assert_eq!(
         encode_comma_array(
             &[Value::Null],
             &path,
-            &base.clone().with_comma_round_trip(true),
+            &base
+                .clone()
+                .with_strict_null_handling(true)
+                .with_comma_round_trip(true),
         ),
         vec!["letters[]".to_owned()]
     );
@@ -168,6 +206,17 @@ fn controlled_comma_arrays_can_compact_or_strictify_nulls() {
             &base
                 .clone()
                 .with_skip_nulls(true)
+                .with_strict_null_handling(true)
+                .with_comma_round_trip(true),
+        ),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        encode_comma_array_controlled(
+            &items,
+            &path,
+            &base
+                .clone()
                 .with_strict_null_handling(true)
                 .with_comma_round_trip(true),
         ),
@@ -505,10 +554,10 @@ fn dot_escape_helper_matches_encode_flag() {
 }
 
 #[test]
-fn strict_null_key_only_fragments_keep_percent_twenty_in_rfc1738_mode() {
+fn strict_null_key_only_fragments_apply_rfc1738_formatting() {
     assert_eq!(
         encode_key_only_fragment("a b", &EncodeOptions::new().with_format(Format::Rfc1738)),
-        "a%20b"
+        "a+b"
     );
     assert_eq!(
         encode_key_only_fragment("a b", &EncodeOptions::new().with_format(Format::Rfc3986)),

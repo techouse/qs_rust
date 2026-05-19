@@ -62,12 +62,7 @@ pub(super) fn encode_string_or_raw(text: &str, options: &EncodeOptions) -> Strin
 }
 
 pub(super) fn encode_key_only_fragment(key: &str, options: &EncodeOptions) -> String {
-    let formatted = format_key_text(key, options);
-    if options.encode && matches!(options.format, Format::Rfc1738) {
-        formatted.replace('+', "%20")
-    } else {
-        formatted
-    }
+    format_key_text(key, options)
 }
 
 pub(super) fn format_key_text(text: &str, options: &EncodeOptions) -> String {
