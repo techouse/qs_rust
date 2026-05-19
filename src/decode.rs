@@ -22,7 +22,7 @@ use self::accumulate::combine_with_limit;
 #[cfg(test)]
 use self::flat::{DefaultAccumulator, FlatValues, ParsedFlatValue, value_list_length_for_combine};
 #[cfg(test)]
-use self::keys::{dot_to_bracket_top_level, find_recoverable_balanced_open, parse_keys};
+use self::keys::{dot_to_bracket_top_level, parse_keys};
 #[cfg(test)]
 use self::scalar::{
     decode_component, decode_scalar, interpret_numeric_entities, interpret_numeric_entities_in_node,

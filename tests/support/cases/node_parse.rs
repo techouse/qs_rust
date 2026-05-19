@@ -70,6 +70,17 @@ pub(crate) fn cases() -> Vec<DecodeParityCase> {
             CaseMeta::new(
                 "node-qs",
                 "parse.js",
+                "normalizes dots before applying depth zero",
+                "depth",
+                true,
+            ),
+            "a.b=c",
+            DecodeOptions::new().with_allow_dots(true).with_depth(0),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
                 "only parses one level when depth is one",
                 "depth",
                 true,
@@ -81,6 +92,116 @@ pub(crate) fn cases() -> Vec<DecodeParityCase> {
             CaseMeta::new("node-qs", "parse.js", "strict depth throws", "depth", true),
             "a[b][c][d]=e",
             DecodeOptions::new().with_depth(1).with_strict_depth(true),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "literal empty brackets inside bracket group",
+                "brackets",
+                true,
+            ),
+            "search[withbracket[]]=foobar",
+            DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "single-level literal empty brackets inside bracket group",
+                "brackets",
+                true,
+            ),
+            "a[b[]]=c",
+            DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "outer array push with literal empty brackets inside child group",
+                "brackets",
+                true,
+            ),
+            "list[][x[]]=y",
+            DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "nested bracket pairs stay literal inside bracket group",
+                "brackets",
+                true,
+            ),
+            "a[b[c[]]]=d",
+            DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "depth limit preserves literal nested bracket group",
+                "depth",
+                true,
+            ),
+            "a[b[c[]]][d]=e",
+            DecodeOptions::new().with_depth(1),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "unterminated bracket group stays one literal segment",
+                "brackets",
+                true,
+            ),
+            "a[[]b=c",
+            DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "trailing text after bracket group is ignored",
+                "brackets",
+                true,
+            ),
+            "a[b]tail=x",
+            DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "top-level percent-encoded bracket text is not mangled",
+                "encoded brackets",
+                true,
+            ),
+            "a%25255Bb=c",
+            DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "top-level percent-encoded closing bracket text is not mangled",
+                "encoded brackets",
+                true,
+            ),
+            "a%25255Db=c",
+            DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "nested percent-encoded bracket text is not mangled",
+                "encoded brackets",
+                true,
+            ),
+            "a%5Bb%25255Bc%5D=d",
+            DecodeOptions::new(),
         ),
         DecodeParityCase::new(
             CaseMeta::new(

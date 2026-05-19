@@ -16,15 +16,15 @@ pub(crate) fn split_key_into_segments(
     max_depth: usize,
     strict_depth: bool,
 ) -> Result<Vec<String>, DecodeError> {
-    if max_depth == 0 {
-        return Ok(vec![original_key.to_owned()]);
-    }
-
     let key = if allow_dots {
         dot_to_bracket_top_level(original_key)
     } else {
         original_key.to_owned()
     };
+
+    if max_depth == 0 {
+        return Ok(vec![key]);
+    }
 
     let mut segments = Vec::new();
     let first = key.find('[');
@@ -35,8 +35,6 @@ pub(crate) fn split_key_into_segments(
 
     let mut open = first;
     let mut depth = 0usize;
-    let mut last_close = None;
-    let mut broke_unterminated = false;
 
     while let Some(open_index) = open {
         if depth >= max_depth {
@@ -63,21 +61,12 @@ pub(crate) fn split_key_into_segments(
         }
 
         let Some(close_index) = close else {
-            if let Some(recovered_open) = find_recoverable_balanced_open(&key, open_index + 1) {
-                if let Some(last) = segments.last_mut() {
-                    last.push_str(&key[open_index..recovered_open]);
-                } else {
-                    segments.push(key[..recovered_open].to_owned());
-                }
-                open = Some(recovered_open);
-                continue;
-            }
-            broke_unterminated = true;
-            break;
+            let remainder = &key[open_index..];
+            segments.push(format!("[{remainder}]"));
+            return Ok(segments);
         };
 
         segments.push(key[open_index..=close_index].to_owned());
-        last_close = Some(close_index);
         depth += 1;
         open = key[close_index + 1..]
             .find('[')
@@ -85,29 +74,12 @@ pub(crate) fn split_key_into_segments(
     }
 
     if let Some(open_index) = open {
-        if strict_depth && !broke_unterminated {
+        if strict_depth {
             return Err(DecodeError::DepthExceeded { depth: max_depth });
-        }
-
-        if broke_unterminated && first == Some(0) {
-            return Ok(vec![original_key.to_owned()]);
         }
 
         let remainder = &key[open_index..];
         segments.push(format!("[{remainder}]"));
-        return Ok(segments);
-    }
-
-    if let Some(close_index) = last_close
-        && close_index + 1 < key.len()
-    {
-        let trailing = &key[close_index + 1..];
-        if trailing != "." {
-            if strict_depth {
-                return Err(DecodeError::DepthExceeded { depth: max_depth });
-            }
-            segments.push(format!("[{trailing}]"));
-        }
     }
 
     Ok(segments)
@@ -164,14 +136,6 @@ fn parse_object(
         } else {
             root.clone()
         };
-
-        if root.starts_with('[')
-            && root.ends_with(']')
-            && clean_root.matches('[').count() > clean_root.matches(']').count()
-            && clean_root.ends_with(']')
-        {
-            clean_root.pop();
-        }
 
         if options.decode_dot_in_keys && clean_root.contains('%') {
             clean_root = replace_ascii_case_insensitive(&clean_root, "%2E", ".");
@@ -310,36 +274,4 @@ fn replace_ascii_case_insensitive(input: &str, needle: &str, replacement: &str) 
         }
     }
     output
-}
-
-pub(super) fn find_recoverable_balanced_open(key: &str, start: usize) -> Option<usize> {
-    let bytes = key.as_bytes();
-    let mut candidate = start;
-
-    while candidate < bytes.len() {
-        if bytes[candidate] != b'[' {
-            candidate += 1;
-            continue;
-        }
-
-        let mut level = 1usize;
-        let mut scan = candidate + 1;
-        while scan < bytes.len() {
-            match bytes[scan] {
-                b'[' => level += 1,
-                b']' => {
-                    level -= 1;
-                    if level == 0 {
-                        return Some(candidate);
-                    }
-                }
-                _ => {}
-            }
-            scan += 1;
-        }
-
-        candidate += 1;
-    }
-
-    None
 }

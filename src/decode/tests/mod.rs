@@ -4,9 +4,9 @@ pub(super) use super::scan::{
 pub(super) use super::{
     DefaultAccumulator, FlatValues, ParsedFlatValue, collect_pair_values, combine_with_limit,
     decode, decode_component, decode_from_pairs_map, decode_pairs, decode_scalar,
-    dot_to_bracket_top_level, finalize_flat, find_recoverable_balanced_open,
-    interpret_numeric_entities, interpret_numeric_entities_in_node, parse_keys,
-    parse_query_string_values, split_key_into_segments, value_list_length_for_combine,
+    dot_to_bracket_top_level, finalize_flat, interpret_numeric_entities,
+    interpret_numeric_entities_in_node, parse_keys, parse_query_string_values,
+    split_key_into_segments, value_list_length_for_combine,
 };
 pub(super) use crate::internal::node::Node;
 pub(super) use crate::options::{
