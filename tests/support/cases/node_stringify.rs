@@ -157,6 +157,19 @@ pub(crate) fn cases() -> Vec<EncodeParityCase> {
             CaseMeta::new(
                 "node-qs",
                 "stringify.js",
+                "strict null handling applies formatter to encoded key",
+                "null handling",
+                true,
+            ),
+            obj(vec![("a b", Value::Null), ("c d", s("e f"))]),
+            EncodeOptions::new()
+                .with_strict_null_handling(true)
+                .with_format(Format::Rfc1738),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
                 "omits empty arrays by default",
                 "empty arrays",
                 true,
@@ -201,6 +214,85 @@ pub(crate) fn cases() -> Vec<EncodeParityCase> {
             ),
             obj(vec![("a", arr(vec![s("x,y"), s("z")]))]),
             EncodeOptions::new().with_list_format(ListFormat::Comma),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "comma arrays with null keep an empty slot",
+                "arrays",
+                true,
+            ),
+            obj(vec![("a", arr(vec![Value::Null, s("b")]))]),
+            EncodeOptions::new().with_list_format(ListFormat::Comma),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "comma arrays with null keep an empty slot under encode values only",
+                "arrays",
+                true,
+            ),
+            obj(vec![("a", arr(vec![Value::Null, s("b")]))]),
+            EncodeOptions::new()
+                .with_list_format(ListFormat::Comma)
+                .with_encode_values_only(true),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "skip nulls does not compact mixed comma arrays",
+                "arrays",
+                true,
+            ),
+            obj(vec![("a", arr(vec![Value::Null, s("b")]))]),
+            EncodeOptions::new()
+                .with_list_format(ListFormat::Comma)
+                .with_encode_values_only(true)
+                .with_skip_nulls(true),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "single null comma array emits empty value",
+                "arrays",
+                true,
+            ),
+            obj(vec![("a", arr(vec![Value::Null]))]),
+            EncodeOptions::new()
+                .with_list_format(ListFormat::Comma)
+                .with_encode_values_only(true),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "single null comma array honors strict null handling",
+                "arrays",
+                true,
+            ),
+            obj(vec![("a", arr(vec![Value::Null]))]),
+            EncodeOptions::new()
+                .with_list_format(ListFormat::Comma)
+                .with_encode_values_only(true)
+                .with_strict_null_handling(true),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "single null comma array is omitted with skip nulls",
+                "arrays",
+                true,
+            ),
+            obj(vec![("a", arr(vec![Value::Null]))]),
+            EncodeOptions::new()
+                .with_list_format(ListFormat::Comma)
+                .with_encode_values_only(true)
+                .with_skip_nulls(true),
         ),
         EncodeParityCase::new(
             CaseMeta::new("node-qs", "stringify.js", "nested arrays", "arrays", true),
@@ -301,6 +393,19 @@ pub(crate) fn cases() -> Vec<EncodeParityCase> {
             EncodeOptions::new()
                 .with_charset(Charset::Iso88591)
                 .with_charset_sentinel(true),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "charset sentinel uses configured delimiter",
+                "charset",
+                true,
+            ),
+            obj(vec![("a", Value::I64(1)), ("b", Value::I64(2))]),
+            EncodeOptions::new()
+                .with_charset_sentinel(true)
+                .with_delimiter(";"),
         ),
         EncodeParityCase::new(
             CaseMeta::new(

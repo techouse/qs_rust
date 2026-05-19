@@ -60,7 +60,7 @@ pub(crate) fn cases() -> Vec<EncodeParityCase> {
             CaseMeta::new(
                 "csharp-qsnet",
                 "EncodeTests.cs",
-                "charset sentinel uses ampersand before body even with custom delimiter",
+                "charset sentinel uses configured delimiter before body",
                 "charset",
                 true,
             ),

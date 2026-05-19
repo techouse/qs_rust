@@ -74,7 +74,7 @@ pub fn encode(value: &Value, options: &EncodeOptions) -> Result<String, EncodeEr
 
     if options.charset_sentinel {
         output.push_str(options.charset.sentinel());
-        output.push('&');
+        output.push_str(&options.delimiter);
     }
 
     output.push_str(&body);
