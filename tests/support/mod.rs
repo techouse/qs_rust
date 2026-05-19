@@ -48,7 +48,7 @@ pub fn require_node_comparison(name: &str) -> bool {
         return true;
     }
 
-    eprintln!("skipping {name}; run npm ci in tests/comparison/js first");
+    eprintln!("skipping {name}; run pnpm install --frozen-lockfile in tests/comparison/js first");
     false
 }
 

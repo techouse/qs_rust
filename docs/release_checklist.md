@@ -2,7 +2,7 @@
 
 Before cutting any later `1.x` release:
 
-- bootstrap the Node-backed comparison environment with `cd tests/comparison/js && npm ci`
+- bootstrap the Node-backed comparison environment with `cd tests/comparison/js && pnpm install --frozen-lockfile`
 - run the feature-slice checks from CI:
   - `cargo test --locked`
   - `cargo test --locked --features serde`
