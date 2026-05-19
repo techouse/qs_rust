@@ -163,12 +163,18 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: npm
-          cache-dependency-path: tests/comparison/js/package-lock.json
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          package_json_file: tests/comparison/js/package.json
+          run_install: false
+          cache: true
+          cache_dependency_path: tests/comparison/js/pnpm-lock.yaml
 
       - name: Bootstrap Node comparison fixture
         working-directory: tests/comparison/js
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Node-backed parity
         run: cargo test --locked --test comparison --test parity_decode --test parity_encode
