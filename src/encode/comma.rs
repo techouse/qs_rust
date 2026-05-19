@@ -127,15 +127,9 @@ pub(super) fn encode_comma_array_controlled(
         if options.skip_nulls {
             return Vec::new();
         }
-        let key_path = if options.comma_round_trip && kept_items == 1 {
-            path.append_empty_list_suffix()
-        } else {
-            path.clone()
-        };
         if options.strict_null_handling {
             return vec![finalize_key_only_fragment(key_path.materialize(), options)];
         }
-        let key = finalize_key_path(key_path.materialize(), options);
         return vec![format!("{key}=")];
     }
 
