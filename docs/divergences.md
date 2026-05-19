@@ -1,6 +1,6 @@
 # Divergence Matrix
 
-`qs_rust` still uses Node `qs` `6.15.1` as the baseline for shared public query-string semantics, but it now tracks sibling-port behavior explicitly in three buckets:
+`qs_rust` still uses Node `qs` `6.15.2` as the baseline for shared public query-string semantics, but it now tracks sibling-port behavior explicitly in three buckets:
 
 - `shared-port default`: Rust adopts the sibling-port extension or fix directly.
 - `Node-compatible default`: Rust intentionally keeps Node behavior even when another port diverges.
@@ -11,7 +11,7 @@
 | Case | Classification | Rust status | Coverage |
 | --- | --- | --- | --- |
 | Parameter counting includes skipped charset sentinel parameters and empty-key pairs | Node-compatible default | Kept | `tests/divergences.rs`, `tests/parity_decode.rs` |
-| Top-level dotted keys remain raw at `depth = 0` even with `allow_dots = true` | Node-compatible default | Kept | `tests/divergences.rs`, `tests/porting_ledger.md` |
+| Top-level dotted keys normalize before `depth = 0` preservation when `allow_dots = true` | Node-compatible default | Kept | `tests/divergences.rs`, `tests/parity_decode.rs` |
 | Negative or infinite limits (`depth`, `listLimit`, `parameterLimit`) from dynamic ports | Unsupported in Rust | Rejected at the type level (`usize`) | `tests/porting_ledger.md` |
 | Prototype/plain-object/null-prototype host behavior from Node | Unsupported in Rust | Not modeled | `tests/porting_ledger.md` |
 | Arbitrary host-object graphs, cycles, reflection-heavy map/object coercions | Unsupported in Rust | Not modeled | `tests/porting_ledger.md` |
@@ -25,7 +25,7 @@
 
 ## Notes
 
-- For `1.x`, Node `qs` `6.15.1` remains the semantic baseline for shared public behavior, while the C# port remains the architectural reference for internal design choices. Other sibling ports are informative only.
+- For `1.x`, Node `qs` `6.15.2` remains the semantic baseline for shared public behavior, while the C# port remains the architectural reference for internal design choices. Other sibling ports are informative only.
 - The public contract for `1.x` is the re-exported surface from `src/lib.rs` together with the intentional boundaries recorded in this matrix and the support/stability policy in `README.md`.
 - Optional features (`serde`, `chrono`, and `time`) follow the same MSRV and platform support policy as the core crate.
 - Rust does not silently inherit every sibling-port divergence. When sibling ports disagree and there is no clear shared correction, the crate stays Node-compatible by default.
