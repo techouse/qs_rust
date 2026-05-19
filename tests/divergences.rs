@@ -123,7 +123,7 @@ fn shared_port_function_filter_can_omit_branches_without_undefined_public_values
 }
 
 #[test]
-fn node_compatible_top_level_dots_remain_raw_when_depth_is_zero() {
+fn node_compatible_depth_zero_normalizes_dots_before_preserving_key() {
     let decoded = decode(
         "a.b=c",
         &DecodeOptions::new().with_allow_dots(true).with_depth(0),
@@ -132,7 +132,7 @@ fn node_compatible_top_level_dots_remain_raw_when_depth_is_zero() {
 
     assert_eq!(
         decoded,
-        IndexMap::from([("a.b".to_owned(), Value::String("c".to_owned()))])
+        IndexMap::from([("a[b]".to_owned(), Value::String("c".to_owned()))])
     );
 }
 

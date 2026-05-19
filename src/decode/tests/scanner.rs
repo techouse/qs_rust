@@ -1,7 +1,6 @@
 use super::{
     Charset, DecodeDecoder, DecodeOptions, Delimiter, Regex, ScannedPart, Value, decode,
-    dot_to_bracket_top_level, find_recoverable_balanced_open, parse_query_string_values,
-    split_key_into_segments,
+    dot_to_bracket_top_level, parse_query_string_values, split_key_into_segments,
 };
 use crate::options::DecodeKind;
 
@@ -22,11 +21,15 @@ fn split_key_into_segments_handles_dots_and_unterminated_groups() {
     );
     assert_eq!(
         split_key_into_segments("[", false, 5, false).unwrap(),
-        vec!["[".to_owned()]
+        vec!["[[]".to_owned()]
     );
     assert_eq!(
         split_key_into_segments("a[b[c]", false, 5, true).unwrap(),
-        vec!["a[b".to_owned(), "[c]".to_owned()]
+        vec!["a".to_owned(), "[[b[c]]".to_owned()]
+    );
+    assert_eq!(
+        split_key_into_segments("a.b", true, 0, false).unwrap(),
+        vec!["a[b]".to_owned()]
     );
 }
 
@@ -47,12 +50,6 @@ fn dot_before_bracket_preserves_literal_dot_in_parent_key() {
             [("b".to_owned(), Value::String("x".to_owned()))].into()
         ))
     );
-}
-
-#[test]
-fn recoverable_balanced_open_finds_nested_group_after_unmatched_prefix() {
-    assert_eq!(find_recoverable_balanced_open("a[b[c]", 2), Some(3));
-    assert_eq!(find_recoverable_balanced_open("a[b[c", 2), None);
 }
 
 #[test]

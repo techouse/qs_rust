@@ -1,6 +1,4 @@
-use super::{
-    DecodeOptions, Node, Value, find_recoverable_balanced_open, parse_keys, split_key_into_segments,
-};
+use super::{DecodeOptions, Node, Value, parse_keys, split_key_into_segments};
 
 fn scalar(value: &str) -> Node {
     Node::scalar(Value::String(value.to_owned()))
@@ -10,15 +8,17 @@ fn scalar(value: &str) -> Node {
 fn structured_key_helpers_cover_recovered_roots_and_trailing_segments() {
     assert_eq!(
         split_key_into_segments("[a[b]", false, 5, false).unwrap(),
-        vec!["[a".to_owned(), "[b]".to_owned()]
+        vec!["[[a[b]]".to_owned()]
     );
-    assert_eq!(find_recoverable_balanced_open("[a[b]", 1), Some(2));
 
     assert_eq!(
         split_key_into_segments("a[b]tail", false, 5, false).unwrap(),
-        vec!["a".to_owned(), "[b]".to_owned(), "[tail]".to_owned()]
+        vec!["a".to_owned(), "[b]".to_owned()]
     );
-    assert!(split_key_into_segments("a[b]tail", false, 5, true).is_err());
+    assert_eq!(
+        split_key_into_segments("a[b]tail", false, 5, true).unwrap(),
+        vec!["a".to_owned(), "[b]".to_owned()]
+    );
 }
 
 #[test]
