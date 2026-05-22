@@ -1,3 +1,12 @@
+## 1.0.3
+
+* [FEAT] add `DecodeOptions::with_strict_merge` / `strict_merge` for Node `qs` `strictMerge` parity, defaulting to modern object/scalar array wrapping while supporting the legacy scalar-key merge mode
+* [FIX] align decode duplicate handling with Node `qs` by combining bracket-array assignments under `Duplicates::First` and `Duplicates::Last` while preserving normal duplicate behavior for plain keys
+* [FIX] align decode key parsing with Node `qs` 6.15.2, including depth-zero dot normalization, unterminated and nested bracket groups, literal bracket text, trailing text after closed brackets, and encoded-bracket cases
+* [FIX] align stringify behavior with Node `qs` 6.15.2 for charset-sentinel delimiters, strict-null RFC1738 key-only formatting, and comma-array null handling
+* [CHORE] update the Node comparison fixture to `qs` 6.15.2 and expand Node-backed parse/stringify parity coverage for the upstream 6.15.0-6.15.2 changes
+* [DOCS] document the `qs` 6.15.2 semantic baseline, pnpm-based comparison fixture setup, bracket duplicate behavior, and `strict_merge` legacy-mode decode output
+
 ## 1.0.2
 
 * [CHORE] update `rand` from 0.9.2 to 0.9.4
