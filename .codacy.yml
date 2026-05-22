@@ -6,6 +6,7 @@ exclude_paths:
   - "fuzz/**"
   - "perf/**"
   - "scripts/**"
+  - "src/bin/qs_perf/**"
   - "src/**/tests.rs"
   - "src/**/tests/**"
   - "tests/**"
