@@ -356,6 +356,28 @@ pub(crate) fn cases() -> Vec<DecodeParityCase> {
             CaseMeta::new(
                 "node-qs",
                 "parse.js",
+                "bracket notation combines with duplicates first",
+                "duplicates",
+                true,
+            ),
+            "a=1&a=2&b[]=1&b[]=2",
+            DecodeOptions::new().with_duplicates(Duplicates::First),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "bracket notation combines with duplicates last",
+                "duplicates",
+                true,
+            ),
+            "a=1&a=2&b[]=1&b[]=2",
+            DecodeOptions::new().with_duplicates(Duplicates::Last),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
                 "strict null handling",
                 "null handling",
                 true,
@@ -391,6 +413,50 @@ pub(crate) fn cases() -> Vec<DecodeParityCase> {
             CaseMeta::new("node-qs", "parse.js", "root collisions", "merging", true),
             "a=1&a[b]=2",
             DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "strict merge wraps object then scalar conflicts by default",
+                "merging",
+                true,
+            ),
+            "a[b]=c&a=d",
+            DecodeOptions::new(),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "legacy merge adds scalar string keys when strict merge is disabled",
+                "merging",
+                true,
+            ),
+            "a[b]=c&a=d",
+            DecodeOptions::new().with_strict_merge(false),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "legacy merge ignores empty assigned scalars",
+                "merging",
+                true,
+            ),
+            "a[b]=c&a=",
+            DecodeOptions::new().with_strict_merge(false),
+        ),
+        DecodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "parse.js",
+                "legacy merge ignores empty missing-value scalars",
+                "merging",
+                true,
+            ),
+            "a[b]=c&a",
+            DecodeOptions::new().with_strict_merge(false),
         ),
         DecodeParityCase::new(
             CaseMeta::new(

@@ -17,7 +17,10 @@ use super::build::{
     build_plain_value,
 };
 use super::combine::try_combine_direct_values;
-use super::insert::{insert_default_value, insert_occupied_value, insert_value};
+use super::insert::{
+    insert_default_value_with_duplicates, insert_occupied_value_with_duplicates, insert_value,
+    insert_value_with_duplicates,
+};
 
 pub(in crate::decode) fn process_query_part_default(
     part: &str,
@@ -80,6 +83,7 @@ pub(in crate::decode) fn process_scanned_part_default_accumulator(
         return Ok(());
     }
     update_structured_syntax_flag(part, &decoded_key, options, has_any_structured_syntax);
+    let duplicates = effective_duplicates_for_part(part, options);
 
     match values {
         DefaultAccumulator::Direct(_) => {
@@ -104,7 +108,7 @@ pub(in crate::decode) fn process_scanned_part_default_accumulator(
                             }
                         }
                     }
-                    Entry::Occupied(mut entry) => match options.duplicates {
+                    Entry::Occupied(mut entry) => match duplicates {
                         Duplicates::First => DirectInsertOutcome::Done,
                         Duplicates::Last => {
                             match build_direct_value(
@@ -171,7 +175,7 @@ pub(in crate::decode) fn process_scanned_part_default_accumulator(
                 } => {
                     let entries = values.ensure_parsed();
                     if via_duplicates {
-                        insert_value(entries.entry(key), value, options)
+                        insert_value_with_duplicates(entries.entry(key), value, options, duplicates)
                     } else {
                         entries.insert(key, value);
                         Ok(())
@@ -180,7 +184,7 @@ pub(in crate::decode) fn process_scanned_part_default_accumulator(
             }
         }
         DefaultAccumulator::Parsed(entries) => {
-            let current_length = if matches!(options.duplicates, Duplicates::Combine) {
+            let current_length = if matches!(duplicates, Duplicates::Combine) {
                 entries
                     .get(&decoded_key)
                     .map_or(0, ParsedFlatValue::list_length_for_combine)
@@ -195,7 +199,7 @@ pub(in crate::decode) fn process_scanned_part_default_accumulator(
                 current_length,
                 DefaultStorageMode::PreferConcrete,
             )?;
-            insert_value(entries.entry(decoded_key), value, options)
+            insert_value_with_duplicates(entries.entry(decoded_key), value, options, duplicates)
         }
     }
 }
@@ -312,6 +316,7 @@ fn process_scanned_part_default_with_mode(
         return Ok(());
     }
     update_structured_syntax_flag(part, &decoded_key, options, has_any_structured_syntax);
+    let duplicates = effective_duplicates_for_part(part, options);
 
     if matches!(mode, DefaultStorageMode::PreferConcrete)
         && matches!(values, FlatValues::Concrete(_))
@@ -333,7 +338,7 @@ fn process_scanned_part_default_with_mode(
                         parsed => (entry.key().clone(), parsed, false),
                     }
                 }
-                Entry::Occupied(mut entry) => match options.duplicates {
+                Entry::Occupied(mut entry) => match duplicates {
                     Duplicates::First => return Ok(()),
                     Duplicates::Last => {
                         let value = build_default_value(
@@ -370,14 +375,14 @@ fn process_scanned_part_default_with_mode(
 
         let entries = values.ensure_parsed();
         if via_duplicates {
-            insert_value(entries.entry(key), value, options)?;
+            insert_value_with_duplicates(entries.entry(key), value, options, duplicates)?;
         } else {
             entries.insert(key, value);
         }
         return Ok(());
     }
 
-    let current_length = if matches!(options.duplicates, Duplicates::Combine) {
+    let current_length = if matches!(duplicates, Duplicates::Combine) {
         values.get_list_length_for_combine(&decoded_key)
     } else {
         0
@@ -390,7 +395,7 @@ fn process_scanned_part_default_with_mode(
         current_length,
         mode,
     )?;
-    insert_default_value(values, decoded_key, value, options)?;
+    insert_default_value_with_duplicates(values, decoded_key, value, options, duplicates)?;
 
     Ok(())
 }
@@ -415,21 +420,22 @@ pub(in crate::decode) fn process_scanned_part_custom(
         return Ok(());
     }
     update_structured_syntax_flag(part, &decoded_key, options, has_any_structured_syntax);
+    let duplicates = effective_duplicates_for_part(part, options);
 
     match values.ensure_parsed().entry(decoded_key) {
         Entry::Occupied(mut entry) => {
-            if matches!(options.duplicates, Duplicates::First) {
+            if matches!(duplicates, Duplicates::First) {
                 return Ok(());
             }
 
-            let current_length = if matches!(options.duplicates, Duplicates::Combine) {
+            let current_length = if matches!(duplicates, Duplicates::Combine) {
                 entry.get().list_length_for_combine()
             } else {
                 0
             };
             let value =
                 build_custom_value(raw_value, part, effective_charset, options, current_length)?;
-            insert_occupied_value(&mut entry, value, options)?;
+            insert_occupied_value_with_duplicates(&mut entry, value, options, duplicates)?;
         }
         Entry::Vacant(entry) => {
             let value = build_custom_value(raw_value, part, effective_charset, options, 0)?;
@@ -438,6 +444,14 @@ pub(in crate::decode) fn process_scanned_part_custom(
     }
 
     Ok(())
+}
+
+fn effective_duplicates_for_part(part: ScannedPart<'_>, options: &DecodeOptions) -> Duplicates {
+    if part.has_bracket_suffix_assignment {
+        Duplicates::Combine
+    } else {
+        options.duplicates
+    }
 }
 
 fn advance_token_count(

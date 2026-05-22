@@ -1,4 +1,4 @@
-use super::{insert_default_value, insert_occupied_value};
+use super::{insert_default_value_with_duplicates, insert_occupied_value_with_duplicates};
 use crate::decode::flat::{FlatValues, ParsedFlatValue};
 use crate::internal::node::Node;
 use crate::options::{DecodeOptions, Duplicates};
@@ -39,10 +39,11 @@ fn occupied_insert_respects_duplicate_strategies() {
         IndexMap::from([("a".to_owned(), ParsedFlatValue::concrete(scalar("1")))]);
     match combine_entries.entry("a".to_owned()) {
         Entry::Occupied(mut entry) => {
-            insert_occupied_value(
+            insert_occupied_value_with_duplicates(
                 &mut entry,
                 ParsedFlatValue::concrete(scalar("2")),
                 &combine_options,
+                Duplicates::Combine,
             )
             .unwrap();
         }
@@ -58,10 +59,11 @@ fn occupied_insert_respects_duplicate_strategies() {
         IndexMap::from([("a".to_owned(), ParsedFlatValue::concrete(scalar("1")))]);
     match last_entries.entry("a".to_owned()) {
         Entry::Occupied(mut entry) => {
-            insert_occupied_value(
+            insert_occupied_value_with_duplicates(
                 &mut entry,
                 ParsedFlatValue::concrete(scalar("2")),
                 &last_options,
+                Duplicates::Last,
             )
             .unwrap();
         }
@@ -77,10 +79,11 @@ fn occupied_insert_respects_duplicate_strategies() {
         IndexMap::from([("a".to_owned(), ParsedFlatValue::concrete(scalar("1")))]);
     match first_entries.entry("a".to_owned()) {
         Entry::Occupied(mut entry) => {
-            insert_occupied_value(
+            insert_occupied_value_with_duplicates(
                 &mut entry,
                 ParsedFlatValue::concrete(scalar("2")),
                 &first_options,
+                Duplicates::First,
             )
             .unwrap();
         }
@@ -96,18 +99,20 @@ fn occupied_insert_respects_duplicate_strategies() {
 fn default_insert_keeps_concrete_storage_until_parsing_is_required() {
     let mut first_values = FlatValues::Concrete(Default::default());
     let first_options = DecodeOptions::new().with_duplicates(Duplicates::First);
-    insert_default_value(
+    insert_default_value_with_duplicates(
         &mut first_values,
         "a".to_owned(),
         ParsedFlatValue::concrete(scalar("1")),
         &first_options,
+        Duplicates::First,
     )
     .unwrap();
-    insert_default_value(
+    insert_default_value_with_duplicates(
         &mut first_values,
         "a".to_owned(),
         ParsedFlatValue::concrete(scalar("2")),
         &first_options,
+        Duplicates::First,
     )
     .unwrap();
     assert!(stores_concrete_value(&first_values, "a"));
@@ -118,18 +123,20 @@ fn default_insert_keeps_concrete_storage_until_parsing_is_required() {
 
     let mut last_values = FlatValues::Concrete(Default::default());
     let last_options = DecodeOptions::new().with_duplicates(Duplicates::Last);
-    insert_default_value(
+    insert_default_value_with_duplicates(
         &mut last_values,
         "a".to_owned(),
         ParsedFlatValue::concrete(scalar("1")),
         &last_options,
+        Duplicates::Last,
     )
     .unwrap();
-    insert_default_value(
+    insert_default_value_with_duplicates(
         &mut last_values,
         "a".to_owned(),
         ParsedFlatValue::concrete(scalar("2")),
         &last_options,
+        Duplicates::Last,
     )
     .unwrap();
     let FlatValues::Concrete(last_entries) = &last_values else {
@@ -139,28 +146,31 @@ fn default_insert_keeps_concrete_storage_until_parsing_is_required() {
 
     let mut combine_values = FlatValues::Concrete(Default::default());
     let combine_options = DecodeOptions::new().with_duplicates(Duplicates::Combine);
-    insert_default_value(
+    insert_default_value_with_duplicates(
         &mut combine_values,
         "a".to_owned(),
         ParsedFlatValue::concrete(scalar("1")),
         &combine_options,
+        Duplicates::Combine,
     )
     .unwrap();
-    insert_default_value(
+    insert_default_value_with_duplicates(
         &mut combine_values,
         "a".to_owned(),
         ParsedFlatValue::concrete(scalar("2")),
         &combine_options,
+        Duplicates::Combine,
     )
     .unwrap();
     assert!(stores_parsed_value(&combine_values, "a"));
 
     let mut parsed_values = FlatValues::Concrete(Default::default());
-    insert_default_value(
+    insert_default_value_with_duplicates(
         &mut parsed_values,
         "a".to_owned(),
         ParsedFlatValue::parsed(Node::Array(vec![Node::scalar(scalar("1"))]), true),
         &DecodeOptions::new(),
+        Duplicates::Combine,
     )
     .unwrap();
     assert!(stores_parsed_value_with_compaction(&parsed_values, "a"));
@@ -169,11 +179,12 @@ fn default_insert_keeps_concrete_storage_until_parsing_is_required() {
 #[test]
 fn default_insert_first_ignores_late_parsed_values_for_existing_concrete_keys() {
     let mut values = FlatValues::Concrete([("a".to_owned(), scalar("1"))].into());
-    insert_default_value(
+    insert_default_value_with_duplicates(
         &mut values,
         "a".to_owned(),
         ParsedFlatValue::parsed(Node::Array(vec![Node::scalar(scalar("2"))]), true),
         &DecodeOptions::new().with_duplicates(Duplicates::First),
+        Duplicates::First,
     )
     .unwrap();
 

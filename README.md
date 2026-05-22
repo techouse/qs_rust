@@ -88,7 +88,11 @@ let encoded = encode(
 assert_eq!(encoded, "user%5Bname%5D=alice&tags%5B%5D=x&tags%5B%5D=y");
 ```
 
-Query-string decoding only produces `Null`, `String`, `Array`, and `Object`. Structured inputs passed to `encode` or `decode_pairs` may also contain `Bool`, numeric variants, and `Bytes`.
+Query-string decoding normally produces `Null`, `String`, `Array`, and
+`Object`. The legacy `with_strict_merge(false)` mode may also produce
+`Bool(true)` marker values to match Node `qs` object/scalar merge behavior.
+Structured inputs passed to `encode` or `decode_pairs` may also contain `Bool`,
+numeric variants, and `Bytes`.
 
 ## Decoding
 
@@ -193,6 +197,36 @@ let first = decode(
 )
 .unwrap();
 assert_eq!(first.get("foo"), Some(&Value::String("bar".to_owned())));
+
+let bracketed = decode(
+    "a=1&a=2&b[]=1&b[]=2",
+    &DecodeOptions::new().with_duplicates(Duplicates::Last),
+)
+.unwrap();
+assert_eq!(bracketed.get("a"), Some(&Value::String("2".to_owned())));
+assert_eq!(
+    bracketed.get("b"),
+    Some(&Value::Array(vec![
+        Value::String("1".to_owned()),
+        Value::String("2".to_owned()),
+    ])),
+);
+
+let legacy_merge = decode(
+    "a[b]=c&a=d",
+    &DecodeOptions::new().with_strict_merge(false),
+)
+.unwrap();
+assert_eq!(
+    legacy_merge.get("a"),
+    Some(&Value::Object(
+        [
+            ("b".to_owned(), Value::String("c".to_owned())),
+            ("d".to_owned(), Value::Bool(true)),
+        ]
+        .into(),
+    )),
+);
 
 let comma = decode("a=b,c", &DecodeOptions::new().with_comma(true)).unwrap();
 assert_eq!(

@@ -7,6 +7,10 @@ fn scalar(value: &str) -> Node {
     Node::scalar(Value::String(value.to_owned()))
 }
 
+fn boolean(value: bool) -> Node {
+    Node::scalar(Value::Bool(value))
+}
+
 #[test]
 fn merge_overflow_object_into_primitive_shifts_indices() {
     let overflow = Node::OverflowObject {
@@ -252,6 +256,52 @@ fn merge_scalar_and_object_source_wraps_into_array() {
     let source = Node::Object([("field".to_owned(), scalar("value"))].into());
     let merged = merge(scalar("a"), source.clone(), &DecodeOptions::new()).unwrap();
     assert_eq!(merged, Node::Array(vec![scalar("a"), source]));
+}
+
+#[test]
+fn merge_strict_merge_false_adds_string_scalar_as_object_key() {
+    let target = Node::Object([("b".to_owned(), scalar("c"))].into());
+
+    let merged = merge(
+        target,
+        scalar("d"),
+        &DecodeOptions::new().with_strict_merge(false),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::Object(
+            [
+                ("b".to_owned(), scalar("c")),
+                ("d".to_owned(), boolean(true))
+            ]
+            .into()
+        )
+    );
+}
+
+#[test]
+fn merge_strict_merge_false_ignores_empty_string_scalar() {
+    let target = Node::Object([("b".to_owned(), scalar("c"))].into());
+
+    let merged = merge(
+        target.clone(),
+        scalar(""),
+        &DecodeOptions::new().with_strict_merge(false),
+    )
+    .unwrap();
+
+    assert_eq!(merged, target);
+}
+
+#[test]
+fn merge_strict_merge_true_wraps_object_scalar_conflicts() {
+    let target = Node::Object([("b".to_owned(), scalar("c"))].into());
+
+    let merged = merge(target.clone(), scalar("d"), &DecodeOptions::new()).unwrap();
+
+    assert_eq!(merged, Node::Array(vec![target, scalar("d")]));
 }
 
 #[test]

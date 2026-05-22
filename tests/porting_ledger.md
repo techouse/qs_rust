@@ -14,7 +14,7 @@
 
 | Source file or family | Rust destination | Status | Node-backed | Reason |
 | --- | --- | --- | --- | --- |
-| `node-qs/test/parse.js` basic, delimiter, dot, depth, array, charset, parameter-limit, comma cases | `tests/support/cases/node_parse.rs`, `tests/parity_decode.rs` | ported | yes | Core decode semantics map directly to the Rust surface. |
+| `node-qs/test/parse.js` basic, delimiter, dot, depth, array, duplicates, `strictMerge`, charset, parameter-limit, comma cases | `tests/support/cases/node_parse.rs`, `tests/parity_decode.rs` | ported | yes | Core decode semantics map directly to the Rust surface. |
 | `node-qs/test/parse.js` prototype pollution, null-prototype, and circular host objects | not imported | skipped | no | JS runtime object-model behavior does not map to the Rust `Value` tree. The Rust custom decoder surface is covered locally instead of mirroring the Node callback tests verbatim. |
 | `node-qs/test/stringify.js` basic object/list/null/format/charset/filter-array/sort/dot cases | `tests/support/cases/node_stringify.rs`, `tests/parity_encode.rs` | ported | yes | Core encode semantics map directly to the Rust surface. |
 | `node-qs/test/stringify.js` JS date/buffer/cycle/prototype cases and callback-specific host-object assertions | not imported | skipped | no | Rust now exposes filter/sorter/value-encoder hooks, but the JS host-object and cycle cases still do not map to the Rust public contract. |

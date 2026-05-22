@@ -132,6 +132,28 @@ pub(crate) fn merge(
                                 continue;
                             }
                             other => {
+                                if !options.strict_merge {
+                                    if let Some(key) = legacy_scalar_merge_key(&other) {
+                                        entries.insert(
+                                            key,
+                                            Node::scalar(crate::value::Value::Bool(true)),
+                                        );
+                                    } else if !is_empty_legacy_scalar(&other) {
+                                        finish_frame(
+                                            &mut stack,
+                                            &mut last_result,
+                                            Node::Array(vec![Node::Object(entries), other]),
+                                        );
+                                        continue;
+                                    }
+                                    finish_frame(
+                                        &mut stack,
+                                        &mut last_result,
+                                        Node::Object(entries),
+                                    );
+                                    continue;
+                                }
+
                                 finish_frame(
                                     &mut stack,
                                     &mut last_result,
@@ -429,6 +451,17 @@ fn array_all_map_like_or_undefined(items: &[Node]) -> bool {
     items
         .iter()
         .all(|item| item.is_undefined() || item.is_map_like())
+}
+
+fn legacy_scalar_merge_key(node: &Node) -> Option<String> {
+    match node {
+        Node::Value(crate::value::Value::String(text)) if !text.is_empty() => Some(text.clone()),
+        _ => None,
+    }
+}
+
+fn is_empty_legacy_scalar(node: &Node) -> bool {
+    matches!(node, Node::Value(crate::value::Value::String(text)) if text.is_empty())
 }
 
 #[cfg(test)]

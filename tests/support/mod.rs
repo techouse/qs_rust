@@ -313,6 +313,7 @@ fn decode_options_to_node_json(options: &DecodeOptions) -> JsonValue {
         "parameterLimit": options.parameter_limit(),
         "parseArrays": options.parse_lists(),
         "strictDepth": options.strict_depth(),
+        "strictMerge": options.strict_merge(),
         "strictNullHandling": options.strict_null_handling(),
         "throwOnLimitExceeded": options.throw_on_limit_exceeded(),
     })
