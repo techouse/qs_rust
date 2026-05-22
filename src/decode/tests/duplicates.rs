@@ -1,6 +1,7 @@
 use super::{
-    DecodeOptions, Duplicates, Node, Value, combine_with_limit, decode, finalize_flat,
-    parse_query_string_values, stores_concrete_value, stores_parsed_value_with_compaction,
+    DecodeDecoder, DecodeOptions, Duplicates, Node, Value, combine_with_limit, decode,
+    finalize_flat, parse_query_string_values, stores_concrete_value,
+    stores_parsed_value_with_compaction,
 };
 
 #[test]
@@ -128,6 +129,48 @@ fn duplicate_first_and_last_keep_concrete_values_when_possible() {
     assert_eq!(
         finalize_flat(last.values, &last_options).unwrap().get("a"),
         Some(&Value::String("2".to_owned()))
+    );
+}
+
+#[test]
+fn bracket_notation_combines_regardless_of_duplicate_strategy() {
+    let first_options = DecodeOptions::new().with_duplicates(Duplicates::First);
+    let first = decode("a=1&a=2&b[]=1&b[]=2", &first_options).unwrap();
+    assert_eq!(first.get("a"), Some(&Value::String("1".to_owned())));
+    assert_eq!(
+        first.get("b"),
+        Some(&Value::Array(vec![
+            Value::String("1".to_owned()),
+            Value::String("2".to_owned()),
+        ]))
+    );
+
+    let last_options = DecodeOptions::new().with_duplicates(Duplicates::Last);
+    let last = decode("a=1&a=2&b%5B%5D=1&b%5B%5D=2", &last_options).unwrap();
+    assert_eq!(last.get("a"), Some(&Value::String("2".to_owned())));
+    assert_eq!(
+        last.get("b"),
+        Some(&Value::Array(vec![
+            Value::String("1".to_owned()),
+            Value::String("2".to_owned()),
+        ]))
+    );
+}
+
+#[test]
+fn bracket_notation_combines_with_custom_decoders() {
+    let options = DecodeOptions::new()
+        .with_duplicates(Duplicates::Last)
+        .with_decoder(Some(DecodeDecoder::new(|input, _, _| input.to_owned())));
+
+    let decoded = decode("a=1&a=2&b[]=1&b[]=2", &options).unwrap();
+    assert_eq!(decoded.get("a"), Some(&Value::String("2".to_owned())));
+    assert_eq!(
+        decoded.get("b"),
+        Some(&Value::Array(vec![
+            Value::String("1".to_owned()),
+            Value::String("2".to_owned()),
+        ]))
     );
 }
 

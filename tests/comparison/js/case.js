@@ -31,6 +31,7 @@ function normalizeDecodeOptions(options) {
         parameterLimit: options.parameterLimit,
         parseArrays: !!options.parseArrays,
         strictDepth: !!options.strictDepth,
+        strictMerge: options.strictMerge !== false,
         strictNullHandling: !!options.strictNullHandling,
         throwOnLimitExceeded: !!options.throwOnLimitExceeded,
     };

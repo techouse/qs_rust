@@ -136,6 +136,13 @@ fn kotlin_model_defaults_match_the_public_baseline() {
     assert_eq!(decode_defaults.charset(), Charset::Utf8);
     assert_eq!(decode_defaults.parameter_limit(), 1000);
     assert_eq!(decode_defaults.duplicates(), Duplicates::Combine);
+    assert!(decode_defaults.strict_merge());
+    assert!(
+        !decode_defaults
+            .clone()
+            .with_strict_merge(false)
+            .strict_merge()
+    );
 
     let encode_defaults = EncodeOptions::new();
     assert!(encode_defaults.encode());

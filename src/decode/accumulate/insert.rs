@@ -14,8 +14,19 @@ pub(in crate::decode) fn insert_value(
     value: ParsedFlatValue,
     options: &DecodeOptions,
 ) -> Result<(), DecodeError> {
+    insert_value_with_duplicates(entry, value, options, options.duplicates)
+}
+
+pub(in crate::decode) fn insert_value_with_duplicates(
+    entry: Entry<'_, String, ParsedFlatValue>,
+    value: ParsedFlatValue,
+    options: &DecodeOptions,
+    duplicates: Duplicates,
+) -> Result<(), DecodeError> {
     match entry {
-        Entry::Occupied(mut entry) => insert_occupied_value(&mut entry, value, options),
+        Entry::Occupied(mut entry) => {
+            insert_occupied_value_with_duplicates(&mut entry, value, options, duplicates)
+        }
         Entry::Vacant(entry) => {
             entry.insert(value);
             Ok(())
@@ -23,12 +34,13 @@ pub(in crate::decode) fn insert_value(
     }
 }
 
-pub(super) fn insert_occupied_value(
+pub(super) fn insert_occupied_value_with_duplicates(
     entry: &mut OccupiedEntry<'_, String, ParsedFlatValue>,
     value: ParsedFlatValue,
     options: &DecodeOptions,
+    duplicates: Duplicates,
 ) -> Result<(), DecodeError> {
-    match options.duplicates {
+    match duplicates {
         Duplicates::Combine => {
             let current = std::mem::replace(
                 entry.get_mut(),
@@ -46,16 +58,17 @@ pub(super) fn insert_occupied_value(
     Ok(())
 }
 
-pub(super) fn insert_default_value(
+pub(super) fn insert_default_value_with_duplicates(
     values: &mut FlatValues,
     key: String,
     value: ParsedFlatValue,
     options: &DecodeOptions,
+    duplicates: Duplicates,
 ) -> Result<(), DecodeError> {
     match values {
         FlatValues::Concrete(entries) => {
             if let ParsedFlatValue::Concrete(value) = value {
-                match options.duplicates {
+                match duplicates {
                     Duplicates::First => {
                         entries.entry(key).or_insert(value);
                         return Ok(());
@@ -70,23 +83,26 @@ pub(super) fn insert_default_value(
                             return Ok(());
                         }
                         let values = values.ensure_parsed();
-                        return insert_value(
+                        return insert_value_with_duplicates(
                             values.entry(key),
                             ParsedFlatValue::concrete(value),
                             options,
+                            duplicates,
                         );
                     }
                 }
             }
 
-            if matches!(options.duplicates, Duplicates::First) && entries.contains_key(&key) {
+            if matches!(duplicates, Duplicates::First) && entries.contains_key(&key) {
                 return Ok(());
             }
 
             let values = values.ensure_parsed();
-            insert_value(values.entry(key), value, options)
+            insert_value_with_duplicates(values.entry(key), value, options, duplicates)
         }
-        FlatValues::Parsed(entries) => insert_value(entries.entry(key), value, options),
+        FlatValues::Parsed(entries) => {
+            insert_value_with_duplicates(entries.entry(key), value, options, duplicates)
+        }
     }
 }
 

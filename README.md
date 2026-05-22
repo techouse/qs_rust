@@ -194,6 +194,36 @@ let first = decode(
 .unwrap();
 assert_eq!(first.get("foo"), Some(&Value::String("bar".to_owned())));
 
+let bracketed = decode(
+    "a=1&a=2&b[]=1&b[]=2",
+    &DecodeOptions::new().with_duplicates(Duplicates::Last),
+)
+.unwrap();
+assert_eq!(bracketed.get("a"), Some(&Value::String("2".to_owned())));
+assert_eq!(
+    bracketed.get("b"),
+    Some(&Value::Array(vec![
+        Value::String("1".to_owned()),
+        Value::String("2".to_owned()),
+    ])),
+);
+
+let legacy_merge = decode(
+    "a[b]=c&a=d",
+    &DecodeOptions::new().with_strict_merge(false),
+)
+.unwrap();
+assert_eq!(
+    legacy_merge.get("a"),
+    Some(&Value::Object(
+        [
+            ("b".to_owned(), Value::String("c".to_owned())),
+            ("d".to_owned(), Value::Bool(true)),
+        ]
+        .into(),
+    )),
+);
+
 let comma = decode("a=b,c", &DecodeOptions::new().with_comma(true)).unwrap();
 assert_eq!(
     comma.get("a"),

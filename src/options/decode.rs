@@ -28,6 +28,7 @@ pub struct DecodeOptions {
     pub(crate) interpret_numeric_entities: bool,
     pub(crate) parse_lists: bool,
     pub(crate) strict_depth: bool,
+    pub(crate) strict_merge: bool,
     pub(crate) strict_null_handling: bool,
     pub(crate) throw_on_limit_exceeded: bool,
     pub(crate) decoder: Option<DecodeDecoder>,
@@ -52,6 +53,7 @@ impl Default for DecodeOptions {
             interpret_numeric_entities: false,
             parse_lists: true,
             strict_depth: false,
+            strict_merge: true,
             strict_null_handling: false,
             throw_on_limit_exceeded: false,
             decoder: None,
@@ -252,6 +254,21 @@ impl DecodeOptions {
     /// Enables or disables strict depth enforcement.
     pub fn with_strict_depth(mut self, strict_depth: bool) -> Self {
         self.strict_depth = strict_depth;
+        self
+    }
+
+    /// Returns whether object/scalar merge conflicts are preserved as arrays.
+    pub fn strict_merge(&self) -> bool {
+        self.strict_merge
+    }
+
+    /// Enables or disables strict object/scalar merge handling.
+    ///
+    /// When enabled, object/scalar conflicts are wrapped in arrays to match
+    /// modern `qs`. Disabling this restores legacy `qs` behavior for scalar
+    /// string conflicts such as `a[b]=c&a=d`.
+    pub fn with_strict_merge(mut self, strict_merge: bool) -> Self {
+        self.strict_merge = strict_merge;
         self
     }
 
