@@ -88,7 +88,11 @@ let encoded = encode(
 assert_eq!(encoded, "user%5Bname%5D=alice&tags%5B%5D=x&tags%5B%5D=y");
 ```
 
-Query-string decoding only produces `Null`, `String`, `Array`, and `Object`. Structured inputs passed to `encode` or `decode_pairs` may also contain `Bool`, numeric variants, and `Bytes`.
+Query-string decoding normally produces `Null`, `String`, `Array`, and
+`Object`. The legacy `with_strict_merge(false)` mode may also produce
+`Bool(true)` marker values to match Node `qs` object/scalar merge behavior.
+Structured inputs passed to `encode` or `decode_pairs` may also contain `Bool`,
+numeric variants, and `Bytes`.
 
 ## Decoding
 
