@@ -53,13 +53,13 @@ indexmap = "2.14.0"
 regex = "1.12.2"
 thiserror = "2.0.17"
 serde = { version = "1.0.228", features = ["derive"], optional = true }
-serde_json = { version = "1.0.145", optional = true, features = ["preserve_order"] }
+serde_json = { version = "1.0.150", optional = true, features = ["preserve_order"] }
 time = { version = "0.3.44", optional = true, features = ["formatting"] }
 
 [dev-dependencies]
 proptest = "1.11.0"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = { version = "1.0.145", features = ["preserve_order"] }
+serde_json = { version = "1.0.150", features = ["preserve_order"] }
 
 [[example]]
 name = "serde_bridge"
