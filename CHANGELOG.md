@@ -1,3 +1,12 @@
+## 1.0.4
+
+* [FIX] align cumulative `list_limit` handling with Node `qs` 6.15.3 across duplicate keys, comma values, bracket notation, mixed scalar/index/append paths, sparse lists, and nested merges, including strict `DecodeError::ListLimitExceeded` errors and numeric-key overflow fallback
+* [FIX] count comma groups assigned through `a[]=` as one outer list element and preserve Node-compatible custom-decoder invocation order for immediate and cumulative limit failures
+* [FIX] preserve overflow-object metadata and numeric indices through later scalar, array, object, sparse, and nested merges
+* [CHORE] update the Node comparison fixture to `qs` 6.15.3 and expand parity coverage for mixed list growth, all 18 upstream unbalanced-bracket cases, and valid astral-character boundaries
+* [DOCS] document the `qs` 6.15.3 semantic baseline and cumulative list-limit behavior across README, rustdoc, divergence and comparison docs, and `skills/qs-rust/SKILL.md`
+* [CHORE] streamline overflow merges by queueing array-source entries directly, preserving order and undefined filtering without an intermediate `IndexMap`
+
 ## 1.0.3
 
 * [FEAT] add `DecodeOptions::with_strict_merge` / `strict_merge` for Node `qs` `strictMerge` parity, defaulting to modern object/scalar array wrapping while supporting the legacy scalar-key merge mode

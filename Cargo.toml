@@ -1,7 +1,7 @@
 [package]
 authors = ["Klemen Tusar <techouse@gmail.com>"]
 name = "qs_rust"
-version = "1.0.3"
+version = "1.0.4"
 edition = "2024"
 rust-version = "1.88"
 description = "A query string encoding and decoding library for Rust. Ported from qs for JavaScript."
@@ -50,7 +50,7 @@ time = ["dep:time"]
 [dependencies]
 chrono = { version = "0.4.45", optional = true, default-features = true }
 indexmap = "2.14.0"
-regex = "1.12.2"
+regex = "1.13.1"
 thiserror = "2.0.17"
 serde = { version = "1.0.228", features = ["derive"], optional = true }
 serde_json = { version = "1.0.150", optional = true, features = ["preserve_order"] }
