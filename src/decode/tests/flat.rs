@@ -263,6 +263,81 @@ fn public_decode_applies_custom_decoder_to_each_comma_split_value() {
 }
 
 #[test]
+fn oversized_flat_comma_value_throws_before_custom_value_decoding() {
+    let seen = Arc::new(Mutex::new(Vec::new()));
+    let capture = Arc::clone(&seen);
+    let error = decode(
+        "a=1,2,3",
+        &DecodeOptions::new()
+            .with_comma(true)
+            .with_list_limit(2)
+            .with_throw_on_limit_exceeded(true)
+            .with_decoder(Some(DecodeDecoder::new(move |input, _, kind| {
+                if matches!(kind, DecodeKind::Value) {
+                    capture.lock().unwrap().push(input.to_owned());
+                }
+                input.to_owned()
+            }))),
+    )
+    .unwrap_err();
+
+    assert!(error.is_list_limit_exceeded());
+    assert!(seen.lock().unwrap().is_empty());
+}
+
+#[test]
+fn cumulative_comma_overflow_decodes_later_token_before_combine_throws() {
+    let seen = Arc::new(Mutex::new(Vec::new()));
+    let capture = Arc::clone(&seen);
+    let error = decode(
+        "a=1,2,3&a=4,5,6",
+        &DecodeOptions::new()
+            .with_comma(true)
+            .with_list_limit(5)
+            .with_throw_on_limit_exceeded(true)
+            .with_decoder(Some(DecodeDecoder::new(move |input, _, kind| {
+                if matches!(kind, DecodeKind::Value) {
+                    capture.lock().unwrap().push(input.to_owned());
+                }
+                input.to_owned()
+            }))),
+    )
+    .unwrap_err();
+
+    assert!(error.is_list_limit_exceeded());
+    assert_eq!(
+        *seen.lock().unwrap(),
+        ["1", "2", "3", "4", "5", "6"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn bracketed_comma_limit_zero_decodes_inner_values_before_outer_throw() {
+    let seen = Arc::new(Mutex::new(Vec::new()));
+    let capture = Arc::clone(&seen);
+    let error = decode(
+        "a[]=1,2",
+        &DecodeOptions::new()
+            .with_comma(true)
+            .with_list_limit(0)
+            .with_throw_on_limit_exceeded(true)
+            .with_decoder(Some(DecodeDecoder::new(move |input, _, kind| {
+                if matches!(kind, DecodeKind::Value) {
+                    capture.lock().unwrap().push(input.to_owned());
+                }
+                input.to_owned()
+            }))),
+    )
+    .unwrap_err();
+
+    assert!(error.is_list_limit_exceeded());
+    assert_eq!(*seen.lock().unwrap(), vec!["1".to_owned(), "2".to_owned()]);
+}
+
+#[test]
 fn flat_value_helpers_cover_limits_lengths_and_undefined_outputs() {
     let soft_limited = collect_pair_values(
         [

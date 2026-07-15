@@ -602,6 +602,20 @@ fn percent_encoding_helpers_match_swift_utils_examples() {
     );
 }
 
+#[test]
+fn percent_encoding_preserves_astral_characters_at_node_chunk_boundaries() {
+    for prefix_length in [1023, 2047] {
+        let prefix = "a".repeat(prefix_length);
+        let input = format!("{prefix}😀");
+        let expected = format!("{prefix}%F0%9F%98%80");
+
+        assert_eq!(
+            percent_encode_bytes(input.as_bytes(), Format::Rfc3986),
+            expected
+        );
+    }
+}
+
 fn describe_token(token: EncodeToken<'_>) -> String {
     match token {
         EncodeToken::Key(key) => format!("key:{key}"),

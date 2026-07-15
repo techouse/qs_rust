@@ -2,11 +2,11 @@
 
 use crate::error::DecodeError;
 use crate::internal::node::Node;
-use crate::internal::overflow::overflow_from_items;
+use crate::internal::overflow::{finalize_list, list_limit_overflow, overflow_from_items};
 use crate::options::{Charset, DecodeKind, DecodeOptions};
 use crate::value::Value;
 
-use super::super::flat::{DefaultStorageMode, ParsedFlatValue};
+use super::super::flat::{DefaultStorageMode, ParsedFlatValue, node_from_value};
 use super::super::scalar::{
     decode_component, decode_scalar_with_known_flags, interpret_numeric_entities,
     interpret_numeric_entities_in_node,
@@ -35,9 +35,14 @@ fn parse_list_value(
     value: &str,
     options: &DecodeOptions,
     current_list_length: usize,
+    is_flat_list_value: bool,
 ) -> Result<Node, DecodeError> {
     if options.comma && !value.is_empty() && value.contains(',') {
         let comma_count = value.bytes().filter(|byte| *byte == b',').count();
+        if is_flat_list_value && options.throw_on_limit_exceeded {
+            list_limit_overflow(comma_count.saturating_add(1), options)?;
+        }
+
         let mut items = Vec::with_capacity(comma_count + 1);
         let mut start = 0usize;
         for (index, byte) in value.bytes().enumerate() {
@@ -49,20 +54,6 @@ fn parse_list_value(
             start = index + 1;
         }
         items.push(Node::scalar(Value::String(value[start..].to_owned())));
-
-        let total_len = current_list_length.saturating_add(items.len());
-        if options.throw_on_limit_exceeded && total_len > options.list_limit {
-            return Err(DecodeError::ListLimitExceeded {
-                limit: options.list_limit,
-            });
-        }
-
-        if !options.throw_on_limit_exceeded
-            && current_list_length == 0
-            && items.len() > options.list_limit
-        {
-            return Ok(overflow_from_items(items));
-        }
 
         return Ok(Node::Array(items));
     }
@@ -107,6 +98,10 @@ fn parse_list_value_default_scanned(
     let needs_component_decode = part.value_has_escape_or_plus || needs_numeric_entities;
 
     if options.comma && !value.is_empty() && part.value_comma_count > 0 {
+        if !part.has_bracket_suffix_assignment && options.throw_on_limit_exceeded {
+            list_limit_overflow(part.value_comma_count.saturating_add(1), options)?;
+        }
+
         let mut items = Vec::with_capacity(part.value_comma_count + 1);
         let mut segment_has_escape_or_plus = false;
         let mut segment_has_numeric_entity_candidate = false;
@@ -151,23 +146,6 @@ fn parse_list_value_default_scanned(
         } else {
             value[start..].to_owned()
         }));
-
-        let total_len = current_list_length.saturating_add(items.len());
-        if options.throw_on_limit_exceeded && total_len > options.list_limit {
-            return Err(DecodeError::ListLimitExceeded {
-                limit: options.list_limit,
-            });
-        }
-
-        if !options.throw_on_limit_exceeded
-            && current_list_length == 0
-            && items.len() > options.list_limit
-        {
-            return Ok(ParsedFlatValue::parsed(
-                overflow_from_items(items.into_iter().map(Node::scalar).collect()),
-                false,
-            ));
-        }
 
         return Ok(ParsedFlatValue::concrete(Value::Array(items)));
     }
@@ -286,6 +264,27 @@ pub(super) fn build_direct_value(
         };
     }
 
+    value = match value {
+        DirectBuiltValue::Concrete(Value::Array(items)) => {
+            if list_limit_overflow(items.len(), options)? {
+                DirectBuiltValue::Promote(ParsedFlatValue::parsed(
+                    overflow_from_items(items.into_iter().map(node_from_value).collect()),
+                    false,
+                ))
+            } else {
+                DirectBuiltValue::Concrete(Value::Array(items))
+            }
+        }
+        DirectBuiltValue::Promote(ParsedFlatValue::Parsed {
+            node: Node::Array(items),
+            needs_compaction,
+        }) => DirectBuiltValue::Promote(ParsedFlatValue::parsed(
+            finalize_list(items, options)?,
+            needs_compaction,
+        )),
+        other => other,
+    };
+
     Ok(value)
 }
 
@@ -305,7 +304,12 @@ pub(super) fn build_custom_value(
             }
         }
         Some(raw_value_text) => {
-            let mut parsed_value = parse_list_value(raw_value_text, options, current_list_length)?;
+            let mut parsed_value = parse_list_value(
+                raw_value_text,
+                options,
+                current_list_length,
+                !part.has_bracket_suffix_assignment,
+            )?;
             if parsed_value.is_undefined() {
                 return Ok(ParsedFlatValue::parsed(parsed_value, true));
             }
@@ -322,6 +326,10 @@ pub(super) fn build_custom_value(
 
     if part.has_bracket_suffix_assignment && matches!(value, Node::Array(_)) {
         value = Node::Array(vec![value]);
+    }
+
+    if let Node::Array(items) = value {
+        value = finalize_list(items, options)?;
     }
 
     Ok(ParsedFlatValue::parsed(value, true))

@@ -233,3 +233,132 @@ fn duplicate_combine_keeps_concrete_array_scalar_mixes_under_limit_and_promotes_
         ))
     );
 }
+
+#[test]
+fn bracketed_comma_group_uses_outer_list_length_for_limit() {
+    let decoded = decode(
+        "a[]=1,2,3,4,5,6",
+        &DecodeOptions::new()
+            .with_comma(true)
+            .with_list_limit(1)
+            .with_throw_on_limit_exceeded(true),
+    )
+    .unwrap();
+
+    assert_eq!(
+        decoded.get("a"),
+        Some(&Value::Array(vec![Value::Array(
+            ["1", "2", "3", "4", "5", "6"]
+                .into_iter()
+                .map(|value| Value::String(value.to_owned()))
+                .collect(),
+        )]))
+    );
+}
+
+#[test]
+fn bracketed_comma_group_overflows_when_outer_limit_is_zero() {
+    let decoded = decode(
+        "a[]=1,2",
+        &DecodeOptions::new().with_comma(true).with_list_limit(0),
+    )
+    .unwrap();
+
+    assert_eq!(
+        decoded.get("a"),
+        Some(&Value::Object(
+            [(
+                "0".to_owned(),
+                Value::Array(vec![
+                    Value::String("1".to_owned()),
+                    Value::String("2".to_owned()),
+                ]),
+            )]
+            .into(),
+        ))
+    );
+}
+
+#[test]
+fn mixed_scalar_and_indexed_list_growth_throws_cumulatively() {
+    let error = decode(
+        "a=x&a[0]=y",
+        &DecodeOptions::new()
+            .with_list_limit(1)
+            .with_throw_on_limit_exceeded(true),
+    )
+    .unwrap_err();
+
+    assert!(error.is_list_limit_exceeded());
+}
+
+#[test]
+fn mixed_indexed_and_append_list_growth_throws_cumulatively() {
+    let error = decode(
+        "a[0]=x&a[]=y",
+        &DecodeOptions::new()
+            .with_list_limit(1)
+            .with_throw_on_limit_exceeded(true),
+    )
+    .unwrap_err();
+
+    assert!(error.is_list_limit_exceeded());
+}
+
+#[test]
+fn mixed_indexed_and_scalar_list_growth_preserves_overflow_indices() {
+    let decoded = decode("a[0]=x&a=y&a[]=z", &DecodeOptions::new().with_list_limit(1)).unwrap();
+
+    assert_eq!(
+        decoded.get("a"),
+        Some(&Value::Object(
+            [
+                (
+                    "0".to_owned(),
+                    Value::Array(vec![
+                        Value::String("x".to_owned()),
+                        Value::String("z".to_owned()),
+                    ]),
+                ),
+                ("1".to_owned(), Value::String("y".to_owned())),
+            ]
+            .into(),
+        ))
+    );
+}
+
+#[test]
+fn sparse_overflow_allows_later_null_to_fill_omitted_index() {
+    let decoded = decode(
+        "a[1]=x&a=y&a[0]",
+        &DecodeOptions::new()
+            .with_list_limit(2)
+            .with_strict_null_handling(true),
+    )
+    .unwrap();
+
+    assert_eq!(
+        decoded.get("a"),
+        Some(&Value::Object(
+            [
+                ("0".to_owned(), Value::Null),
+                ("1".to_owned(), Value::String("x".to_owned())),
+                ("2".to_owned(), Value::String("y".to_owned())),
+            ]
+            .into(),
+        ))
+    );
+}
+
+#[test]
+fn nested_mixed_list_growth_throws_cumulatively() {
+    let error = decode(
+        "a[b][0]=x&a[b][]=y",
+        &DecodeOptions::new()
+            .with_list_limit(1)
+            .with_throw_on_limit_exceeded(true),
+    )
+    .unwrap_err();
+
+    assert!(error.is_list_limit_exceeded());
+}
