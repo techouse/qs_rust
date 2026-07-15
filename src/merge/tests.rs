@@ -231,6 +231,35 @@ fn merge_overflow_objects_append_arrays_and_scalars() {
 }
 
 #[test]
+fn merge_array_into_overflow_object_merges_colliding_numeric_keys() {
+    let merged = merge(
+        Node::OverflowObject {
+            entries: [
+                ("0".to_owned(), scalar("a")),
+                ("1".to_owned(), scalar("tail")),
+            ]
+            .into(),
+            max_index: 1,
+        },
+        Node::Array(vec![scalar("b")]),
+        &DecodeOptions::new().with_list_limit(1),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::OverflowObject {
+            entries: [
+                ("0".to_owned(), Node::Array(vec![scalar("a"), scalar("b")]),),
+                ("1".to_owned(), scalar("tail")),
+            ]
+            .into(),
+            max_index: 1,
+        }
+    );
+}
+
+#[test]
 fn merge_arrays_into_overflow_sources_track_max_indices() {
     let merged = merge(
         Node::Array(vec![scalar("a")]),
@@ -544,5 +573,146 @@ fn merge_map_like_arrays_can_fall_back_to_numeric_objects_when_holes_remain() {
             )]
             .into()
         )
+    );
+}
+
+#[test]
+fn merge_array_and_scalar_over_limit_promotes_to_overflow_object() {
+    let merged = merge(
+        Node::Array(vec![scalar("a")]),
+        scalar("b"),
+        &DecodeOptions::new().with_list_limit(1),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::OverflowObject {
+            entries: [("0".to_owned(), scalar("a")), ("1".to_owned(), scalar("b")),].into(),
+            max_index: 1,
+        }
+    );
+}
+
+#[test]
+fn merge_array_and_scalar_over_limit_throws_in_strict_mode() {
+    let error = merge(
+        Node::Array(vec![scalar("a")]),
+        scalar("b"),
+        &DecodeOptions::new()
+            .with_list_limit(1)
+            .with_throw_on_limit_exceeded(true),
+    )
+    .unwrap_err();
+
+    assert!(error.is_list_limit_exceeded());
+}
+
+#[test]
+fn merge_arrays_over_limit_promote_to_overflow_object() {
+    let merged = merge(
+        Node::Array(vec![scalar("a")]),
+        Node::Array(vec![scalar("b")]),
+        &DecodeOptions::new().with_list_limit(1),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::OverflowObject {
+            entries: [("0".to_owned(), scalar("a")), ("1".to_owned(), scalar("b")),].into(),
+            max_index: 1,
+        }
+    );
+}
+
+#[test]
+fn merge_map_like_arrays_enforce_limit_after_child_merges() {
+    let merged = merge(
+        Node::Array(vec![Node::Object(
+            [("left".to_owned(), scalar("a"))].into(),
+        )]),
+        Node::Array(vec![
+            Node::Undefined,
+            Node::Object([("right".to_owned(), scalar("b"))].into()),
+        ]),
+        &DecodeOptions::new().with_list_limit(1),
+    )
+    .unwrap();
+
+    assert!(matches!(
+        merged,
+        Node::OverflowObject {
+            entries,
+            max_index: 1,
+        } if entries.len() == 2
+            && matches!(entries.get("0"), Some(Node::Object(values)) if values.contains_key("left"))
+            && matches!(entries.get("1"), Some(Node::Object(values)) if values.contains_key("right"))
+    ));
+}
+
+#[test]
+fn merge_primitive_and_array_source_over_limit_throws_in_strict_mode() {
+    let error = merge(
+        scalar("root"),
+        Node::Array(vec![scalar("leaf")]),
+        &DecodeOptions::new()
+            .with_list_limit(1)
+            .with_throw_on_limit_exceeded(true),
+    )
+    .unwrap_err();
+
+    assert!(error.is_list_limit_exceeded());
+}
+
+#[test]
+fn merge_primitive_and_object_source_over_limit_promotes_to_overflow_object() {
+    let source = Node::Object([("field".to_owned(), scalar("value"))].into());
+    let merged = merge(
+        scalar("root"),
+        source.clone(),
+        &DecodeOptions::new().with_list_limit(1),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::OverflowObject {
+            entries: [("0".to_owned(), scalar("root")), ("1".to_owned(), source),].into(),
+            max_index: 1,
+        }
+    );
+}
+
+#[test]
+fn merge_object_and_scalar_strict_merge_asymmetry_ignores_list_limit() {
+    let target = Node::Object([("field".to_owned(), scalar("value"))].into());
+    let merged = merge(
+        target.clone(),
+        scalar("tail"),
+        &DecodeOptions::new()
+            .with_list_limit(1)
+            .with_throw_on_limit_exceeded(true),
+    )
+    .unwrap();
+
+    assert_eq!(merged, Node::Array(vec![target, scalar("tail")]));
+}
+
+#[test]
+fn merge_sparse_arrays_keep_object_fallback_when_list_parsing_is_disabled() {
+    let merged = merge(
+        Node::Array(vec![Node::Undefined]),
+        scalar("value"),
+        &DecodeOptions::new()
+            .with_parse_lists(false)
+            .with_list_limit(0)
+            .with_throw_on_limit_exceeded(true),
+    )
+    .unwrap();
+
+    assert_eq!(
+        merged,
+        Node::Object([("1".to_owned(), scalar("value"))].into())
     );
 }

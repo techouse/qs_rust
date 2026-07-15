@@ -4,7 +4,7 @@ use regex::Regex;
 use super::{CaseMeta, DecodeParityCase};
 
 pub(crate) fn cases() -> Vec<DecodeParityCase> {
-    vec![
+    let mut cases = vec![
         DecodeParityCase::new(
             CaseMeta::new(
                 "node-qs",
@@ -499,5 +499,282 @@ pub(crate) fn cases() -> Vec<DecodeParityCase> {
                 .with_list_limit(3)
                 .with_throw_on_limit_exceeded(true),
         ),
+    ];
+    cases.extend(qs_6_15_3_cases());
+    cases
+}
+
+fn qs_6_15_3_cases() -> Vec<DecodeParityCase> {
+    vec![
+        node_parse_case(
+            "mixed scalar then index enforces cumulative list limit",
+            "list limits",
+            "a=x&a[0]=y",
+            DecodeOptions::new()
+                .with_list_limit(1)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "mixed index then append enforces cumulative list limit",
+            "list limits",
+            "a[0]=x&a[]=y",
+            DecodeOptions::new()
+                .with_list_limit(1)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "duplicate scalars enforce cumulative list limit",
+            "list limits",
+            "a=x&a=y",
+            DecodeOptions::new()
+                .with_list_limit(1)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "duplicate bracket values enforce cumulative list limit",
+            "list limits",
+            "a[]=x&a[]=y",
+            DecodeOptions::new()
+                .with_list_limit(1)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "indexed list then scalar enforces cumulative list limit",
+            "list limits",
+            "a[0]=1&a[1]=2&a=3",
+            DecodeOptions::new()
+                .with_list_limit(1)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "mixed index then scalar promotes on cumulative overflow",
+            "list limits",
+            "a[0]=x&a=y",
+            DecodeOptions::new().with_list_limit(1),
+        ),
+        node_parse_case(
+            "mixed index then append promotes on cumulative overflow",
+            "list limits",
+            "a[0]=x&a[]=y",
+            DecodeOptions::new().with_list_limit(1),
+        ),
+        node_parse_case(
+            "mixed overflow keeps later append indices",
+            "list limits",
+            "a[0]=x&a=y&a[]=z",
+            DecodeOptions::new().with_list_limit(1),
+        ),
+        node_parse_case(
+            "sparse overflow allows a later null to fill an omitted index",
+            "list limits",
+            "a[1]=x&a=y&a[0]",
+            DecodeOptions::new()
+                .with_list_limit(2)
+                .with_strict_null_handling(true),
+        ),
+        node_parse_case(
+            "nested mixed list growth enforces cumulative limit",
+            "list limits",
+            "a[b][0]=x&a[b][]=y",
+            DecodeOptions::new()
+                .with_list_limit(1)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "cumulative comma growth succeeds at limit",
+            "comma",
+            "a=1,2,3&a=4,5",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(5)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "cumulative comma growth throws over limit",
+            "comma",
+            "a=1,2,3&a=4,5,6",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(5)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "cumulative comma growth softly promotes over limit",
+            "comma",
+            "a=1,2,3&a=4,5,6",
+            DecodeOptions::new().with_comma(true).with_list_limit(5),
+        ),
+        node_parse_case(
+            "later comma token throws after earlier cumulative overflow",
+            "comma",
+            "a=v,v,v,v,v&a=v,v,v,v,v&a=v,v,v,v,v",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(5)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "nested flat comma value throws before splitting",
+            "comma",
+            "a[b]=1,2,3,4,5,6",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(5)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "bracketed comma group counts as one outer item",
+            "comma",
+            "a[]=1,2,3,4,5,6",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(1)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "multiple bracketed comma groups count as outer items",
+            "comma",
+            "a[]=1,2,3&a[]=4,5,6",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(5)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "bracketed comma group softly overflows at zero outer items",
+            "comma",
+            "a[]=1,2",
+            DecodeOptions::new().with_comma(true).with_list_limit(0),
+        ),
+        node_parse_case(
+            "bracketed comma group throws at zero outer items",
+            "comma",
+            "a[]=1,2",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(0)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "unclosed group after a parent",
+            "unbalanced brackets",
+            "a[bc=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "bare unclosed bracket after a parent",
+            "unbalanced brackets",
+            "a[=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "unclosed group after a valid group",
+            "unbalanced brackets",
+            "a[b][c=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "unclosed group after trailing text",
+            "unbalanced brackets",
+            "a[b]c[d=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "issue 558 custom tag reproduction",
+            "unbalanced brackets",
+            "filters[customtags:Env: Prod=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "stray close before unclosed group",
+            "unbalanced brackets",
+            "][a=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "stray close inside parent before unclosed group",
+            "unbalanced brackets",
+            "a][b=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "unclosed group containing inner bracket",
+            "unbalanced brackets",
+            "a[b[c=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "unbalanced group containing inner close bracket",
+            "unbalanced brackets",
+            "a[b[c]=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "unclosed inner bracket group after valid group",
+            "unbalanced brackets",
+            "a[b][c[d=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "key starts with unclosed bracket",
+            "unbalanced brackets",
+            "[abc=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "key starts with unbalanced bracket group",
+            "unbalanced brackets",
+            "[[]b=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "depth budget leaves final unclosed remainder literal",
+            "unbalanced brackets",
+            "a[b]c[d]e[f=v",
+            DecodeOptions::new().with_depth(5),
+        ),
+        node_parse_case(
+            "low depth leaves more unclosed remainder literal",
+            "unbalanced brackets",
+            "a[b]c[d]e[f=v",
+            DecodeOptions::new().with_depth(1),
+        ),
+        node_parse_case(
+            "depth zero keeps unbalanced key literal",
+            "unbalanced brackets",
+            "a[bc=v",
+            DecodeOptions::new().with_depth(0),
+        ),
+        node_parse_case(
+            "allow dots preserves trailing unclosed bracket",
+            "unbalanced brackets",
+            "a.b[c=v",
+            DecodeOptions::new().with_allow_dots(true),
+        ),
+        node_parse_case(
+            "stray close without open bracket stays flat",
+            "unbalanced brackets",
+            "a]b=v",
+            DecodeOptions::new(),
+        ),
+        node_parse_case(
+            "text after balanced group remains ignored",
+            "unbalanced brackets",
+            "a[b]extra=v",
+            DecodeOptions::new(),
+        ),
     ]
+}
+
+fn node_parse_case(
+    title: &'static str,
+    family: &'static str,
+    query: &'static str,
+    options: DecodeOptions,
+) -> DecodeParityCase {
+    DecodeParityCase::new(
+        CaseMeta::new("node-qs", "parse.js", title, family, true),
+        query,
+        options,
+    )
 }

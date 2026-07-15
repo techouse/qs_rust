@@ -7,7 +7,7 @@ use indexmap::IndexMap;
 use crate::error::DecodeError;
 use crate::internal::node::Node;
 use crate::internal::overflow::{
-    array_to_numeric_object, max_numeric_index, parse_canonical_index,
+    array_to_numeric_object, finalize_list, max_numeric_index, parse_canonical_index,
 };
 use crate::options::DecodeOptions;
 
@@ -69,11 +69,8 @@ pub(crate) fn merge(
                                         Node::Object(entries),
                                     );
                                 } else {
-                                    finish_frame(
-                                        &mut stack,
-                                        &mut last_result,
-                                        Node::Array(indexed),
-                                    );
+                                    let result = finalize_list(indexed, options)?;
+                                    finish_frame(&mut stack, &mut last_result, result);
                                 }
                                 continue;
                             }
@@ -98,13 +95,15 @@ pub(crate) fn merge(
                                             .into_iter()
                                             .filter(|item| !item.is_undefined()),
                                     );
-                                    finish_frame(&mut stack, &mut last_result, Node::Array(merged));
+                                    let result = finalize_list(merged, options)?;
+                                    finish_frame(&mut stack, &mut last_result, result);
                                     continue;
                                 }
                                 other => {
                                     let mut merged = target_items;
                                     merged.push(other);
-                                    finish_frame(&mut stack, &mut last_result, Node::Array(merged));
+                                    let result = finalize_list(merged, options)?;
+                                    finish_frame(&mut stack, &mut last_result, result);
                                     continue;
                                 }
                             }
@@ -168,14 +167,15 @@ pub(crate) fn merge(
                         } => {
                             match source {
                                 Node::Array(source_items) => {
-                                    for item in source_items {
-                                        if item.is_undefined() {
-                                            continue;
-                                        }
-
-                                        max_index = max_index.saturating_add(1);
-                                        entries.insert(max_index.to_string(), item);
-                                    }
+                                    frame.map_result = entries;
+                                    frame.source_entries =
+                                        array_to_numeric_object(source_items, false)
+                                            .into_iter()
+                                            .collect();
+                                    frame.track_overflow = true;
+                                    frame.max_index = Some(max_index);
+                                    frame.phase = MergePhase::MapIter;
+                                    continue;
                                 }
                                 Node::Undefined => {}
                                 other => {
@@ -199,7 +199,8 @@ pub(crate) fn merge(
                                 merged.extend(
                                     source_items.into_iter().filter(|item| !item.is_undefined()),
                                 );
-                                finish_frame(&mut stack, &mut last_result, Node::Array(merged));
+                                let result = finalize_list(merged, options)?;
+                                finish_frame(&mut stack, &mut last_result, result);
                                 continue;
                             }
                             source_other => {
@@ -302,11 +303,8 @@ pub(crate) fn merge(
                         continue;
                     }
                     (other, source_map) => {
-                        finish_frame(
-                            &mut stack,
-                            &mut last_result,
-                            Node::Array(vec![other, source_map]),
-                        );
+                        let result = finalize_list(vec![other, source_map], options)?;
+                        finish_frame(&mut stack, &mut last_result, result);
                         continue;
                     }
                 }
@@ -358,7 +356,7 @@ pub(crate) fn merge(
                             false,
                         ))
                     } else {
-                        Node::Array(std::mem::take(&mut frame.array_items))
+                        finalize_list(std::mem::take(&mut frame.array_items), options)?
                     };
                     finish_frame(&mut stack, &mut last_result, result);
                     continue;

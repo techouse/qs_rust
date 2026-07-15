@@ -276,7 +276,7 @@ fn node_list_length_for_combine(node: &Node) -> usize {
     }
 }
 
-fn node_from_value(value: Value) -> Node {
+pub(super) fn node_from_value(value: Value) -> Node {
     match value {
         Value::Array(items) => Node::Array(items.into_iter().map(node_from_value).collect()),
         Value::Object(entries) => Node::Object(

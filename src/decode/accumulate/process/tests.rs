@@ -198,7 +198,7 @@ fn flat_value_processing_covers_force_parsed_and_prefer_concrete_modes() {
     let mut promote_tokens = 0usize;
     let mut promote_structure = false;
     process_scanned_part_default_with_mode(
-        ScannedPart::new("a[]=1,2"),
+        ScannedPart::new("a[b]=1,2"),
         Charset::Utf8,
         &DecodeOptions::new().with_comma(true).with_list_limit(1),
         &mut promote_from_prefer_concrete,
@@ -207,7 +207,7 @@ fn flat_value_processing_covers_force_parsed_and_prefer_concrete_modes() {
         DefaultStorageMode::PreferConcrete,
     )
     .unwrap();
-    assert!(stores_parsed_value(&promote_from_prefer_concrete, "a[]"));
+    assert!(stores_parsed_value(&promote_from_prefer_concrete, "a[b]"));
     assert!(promote_structure);
 
     let mut force_parsed = FlatValues::Concrete(Default::default());
