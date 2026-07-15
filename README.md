@@ -692,7 +692,7 @@ cd tests/comparison/js
 pnpm install --frozen-lockfile
 ```
 
-The checked-in `pnpm-lock.yaml` pins `qs` to `6.15.2`.
+The checked-in `pnpm-lock.yaml` pins `qs` to `6.15.3`.
 
 Rust-specific behavior lives alongside that parity layer:
 
@@ -791,7 +791,7 @@ This repository now tracks the published `1.0.0` contract. The intended `1.x` co
 
 After `1.0.0`, changes should stay focused on bug fixes, test additions, documentation improvements, measurement-backed performance work, and additive features that keep the current `1.x` non-goals explicit.
 
-- Node `qs` `6.15.2` remains the semantic baseline for shared public query-string behavior.
+- Node `qs` `6.15.3` remains the semantic baseline for shared public query-string behavior.
 - C# remains the architectural reference for internal design decisions. Other sibling ports are informative, not normative.
 - The semantic core is shared across the dynamic API, the typed option/enums, the callback wrappers, and the optional `serde` bridge (`from_str` / `to_string`).
 - [docs/divergences.md](https://github.com/techouse/qs_rust/blob/main/docs/divergences.md) records the intentional `1.x` boundaries: host-object reflection, cycles, runtime bridge behavior, and other non-goals remain unsupported by design.

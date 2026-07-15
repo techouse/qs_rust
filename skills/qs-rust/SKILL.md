@@ -156,9 +156,14 @@ Use these options with `decode(query, &DecodeOptions::new()...)`:
   list syntax as object keys.
 - Empty list tokens such as `foo[]`: `with_allow_empty_lists(true)`.
 - Sparse list indices: use `with_allow_sparse_lists(true)` to preserve gaps.
-- Large list indices: default `list_limit` is `20`; indices above the limit
-  become object keys unless `throw_on_limit_exceeded` is enabled.
-- Comma-separated values such as `a=b,c`: `with_comma(true)`.
+- List representation threshold: default `list_limit` is `20`; numeric indices
+  at or above the threshold become object keys. Soft overflow preserves every
+  value in a numeric-keyed object, while `throw_on_limit_exceeded` reports a
+  `DecodeError`. The threshold applies to cumulative list growth across
+  duplicate keys, comma values, bracket notation, mixed index/scalar/append
+  forms, sparse lists, and nested merges. Sparse gaps count toward list length.
+- Comma-separated values such as `a=b,c`: `with_comma(true)`. A comma group
+  assigned through `a[]=` counts as one outer list element.
 - Tokens without `=` as null: `with_strict_null_handling(true)`.
 - Custom delimiters: `with_delimiter(Delimiter::String(";".to_owned()))`, or
   `with_delimiter(Delimiter::Regex(regex))` when the app also depends on
@@ -168,9 +173,10 @@ Use these options with `decode(query, &DecodeOptions::new()...)`:
   the real charset.
 - HTML numeric entities: `with_interpret_numeric_entities(true)`, usually with
   ISO-8859-1 or charset sentinel handling.
-- Untrusted input: keep `depth`, `parameter_limit`, and `list_limit` bounded;
-  use `with_strict_depth(true)` and `with_throw_on_limit_exceeded(true)` when
-  callers need hard failures instead of soft limiting.
+- Untrusted input: bound the raw input size and keep `depth`, `parameter_limit`,
+  and `list_limit` controlled. Use `with_strict_depth(true)` and
+  `with_throw_on_limit_exceeded(true)` when callers need hard failures;
+  `list_limit` alone changes representation without capping accepted values.
 
 Example for a request query:
 
@@ -339,16 +345,19 @@ Warn or adjust before giving code for these cases:
 - Empty string delimiters are invalid for both decode and encode.
 - `with_decode_dot_in_keys(true)` and `with_encode_dot_in_keys(true)` imply dot
   notation; turning dot notation off afterward clears the dot-key option.
-- `with_throw_on_limit_exceeded(true)` turns parameter and list limit overflows
-  into `DecodeError` values; without it, parsing truncates or falls back.
+- `with_throw_on_limit_exceeded(true)` turns parameter and cumulative list
+  limit overflows into `DecodeError` values; without it, parameter parsing
+  truncates and list growth falls back to numeric-keyed objects.
 - `with_strict_depth(true)` errors on well-formed decode depth overflow; with
   the default `false`, the remainder beyond `depth` is kept as a trailing key
   segment.
 - `with_max_depth(Some(n))` limits encode traversal and can return
   `EncodeError::DepthExceeded`.
 - Built-in charset handling supports UTF-8 and ISO-8859-1.
-- `with_comma(true)` parses simple comma-separated values, but does not
-  decode nested object syntax inside comma items.
+- `with_comma(true)` parses simple comma-separated values, but does not decode
+  nested object syntax inside comma items. Flat comma values are measured by
+  item count against the list threshold, while each `[]=` comma group is one
+  outer list item.
 - `encode` of scalar roots, empty objects, and empty containers generally
   produces an empty string.
 - Standard URL extractors and many web frameworks flatten duplicates or nested
