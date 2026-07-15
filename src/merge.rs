@@ -168,10 +168,14 @@ pub(crate) fn merge(
                             match source {
                                 Node::Array(source_items) => {
                                     frame.map_result = entries;
-                                    frame.source_entries =
-                                        array_to_numeric_object(source_items, false)
-                                            .into_iter()
-                                            .collect();
+                                    frame.source_entries = source_items
+                                        .into_iter()
+                                        .enumerate()
+                                        .filter_map(|(index, item)| {
+                                            (!item.is_undefined())
+                                                .then(|| (index.to_string(), item))
+                                        })
+                                        .collect();
                                     frame.track_overflow = true;
                                     frame.max_index = Some(max_index);
                                     frame.phase = MergePhase::MapIter;
