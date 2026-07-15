@@ -123,13 +123,22 @@ impl DecodeOptions {
         self
     }
 
-    /// Returns the maximum dense list length accepted before overflow handling
-    /// is required.
+    /// Returns the list representation threshold used during decode.
+    ///
+    /// Results beyond the threshold are preserved as numeric-keyed objects by
+    /// default. When [`Self::throw_on_limit_exceeded`] is enabled, exceeding
+    /// the threshold returns [`DecodeError::ListLimitExceeded`] instead.
     pub fn list_limit(&self) -> usize {
         self.list_limit
     }
 
-    /// Sets the maximum dense list length accepted during decode.
+    /// Sets the list representation threshold used during decode.
+    ///
+    /// The threshold applies to cumulative list growth across duplicate keys,
+    /// comma values, bracket notation, numeric indices, and mixed or nested
+    /// merges. Sparse indices count through the resulting list length,
+    /// including gaps. Comma groups assigned through `[]=` count as one outer
+    /// list element regardless of the inner group size.
     pub fn with_list_limit(mut self, list_limit: usize) -> Self {
         self.list_limit = list_limit;
         self
@@ -283,13 +292,14 @@ impl DecodeOptions {
         self
     }
 
-    /// Returns whether limit overflows are reported as errors instead of being
-    /// compacted or redirected.
+    /// Returns whether limit overflows are reported as errors instead of using
+    /// soft truncation or numeric-keyed object fallback behavior.
     pub fn throw_on_limit_exceeded(&self) -> bool {
         self.throw_on_limit_exceeded
     }
 
-    /// Enables or disables hard errors for list and parameter limit overflows.
+    /// Enables or disables hard errors for cumulative list and parameter limit
+    /// overflows.
     pub fn with_throw_on_limit_exceeded(mut self, throw_on_limit_exceeded: bool) -> Self {
         self.throw_on_limit_exceeded = throw_on_limit_exceeded;
         self
