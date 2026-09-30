@@ -22,7 +22,7 @@ Concise, project-specific guidance for AI coding agents working on this repo. Fo
   - `examples/`: runnable usage examples for the dynamic API, options, and the feature-gated serde bridge
 
 ## 2. Key Behavioral Invariants
-- Treat Node `qs` `6.15.0` as the default parity baseline unless an intentional Rust divergence is documented in `docs/divergences.md`.
+- Treat Node `qs` `6.16.0` as the default parity baseline unless an intentional Rust divergence is documented in `docs/divergences.md`.
 - Query-string `decode` only produces `Null`, `String`, `Array`, and `Object`. It must not infer booleans, numbers, or `Bytes`.
 - `Bytes` are accepted by `encode` and `decode_pairs`, but raw query decoding never produces `Bytes`.
 - `decode_pairs` is intentionally different from `decode`: it starts at the structured merge pipeline and bypasses delimiter parsing, query-prefix stripping, charset sentinel detection, and numeric-entity interpretation.
