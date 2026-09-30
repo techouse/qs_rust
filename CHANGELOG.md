@@ -1,4 +1,4 @@
-## Unreleased
+## 1.0.5
 
 * [FIX] enforce strict `list_limit` checks on each `[]=` comma group before splitting or invoking custom value decoders, closing the bracket-key bypass while preserving non-throwing behavior
 * [FIX] apply `encode_dot_in_keys` to top-level primitive-valued keys, preserving literal dots through round trips and function filters
