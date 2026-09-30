@@ -35,11 +35,10 @@ fn parse_list_value(
     value: &str,
     options: &DecodeOptions,
     current_list_length: usize,
-    is_flat_list_value: bool,
 ) -> Result<Node, DecodeError> {
     if options.comma && !value.is_empty() && value.contains(',') {
         let comma_count = value.bytes().filter(|byte| *byte == b',').count();
-        if is_flat_list_value && options.throw_on_limit_exceeded {
+        if options.throw_on_limit_exceeded {
             list_limit_overflow(comma_count.saturating_add(1), options)?;
         }
 
@@ -98,7 +97,7 @@ fn parse_list_value_default_scanned(
     let needs_component_decode = part.value_has_escape_or_plus || needs_numeric_entities;
 
     if options.comma && !value.is_empty() && part.value_comma_count > 0 {
-        if !part.has_bracket_suffix_assignment && options.throw_on_limit_exceeded {
+        if options.throw_on_limit_exceeded {
             list_limit_overflow(part.value_comma_count.saturating_add(1), options)?;
         }
 
@@ -304,12 +303,7 @@ pub(super) fn build_custom_value(
             }
         }
         Some(raw_value_text) => {
-            let mut parsed_value = parse_list_value(
-                raw_value_text,
-                options,
-                current_list_length,
-                !part.has_bracket_suffix_assignment,
-            )?;
+            let mut parsed_value = parse_list_value(raw_value_text, options, current_list_length)?;
             if parsed_value.is_undefined() {
                 return Ok(ParsedFlatValue::parsed(parsed_value, true));
             }
