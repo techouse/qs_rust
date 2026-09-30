@@ -31,6 +31,44 @@ fn obj(entries: Vec<(&str, Value)>) -> Value {
 }
 
 #[test]
+fn dotted_root_primitive_keys_round_trip() {
+    let original = obj(vec![("a.b.c", s("x y")), ("d.e", s("z"))]);
+    let encoded = encode(
+        &original,
+        &EncodeOptions::new().with_encode_dot_in_keys(true),
+    )
+    .unwrap();
+    assert_eq!(encoded, "a%252Eb%252Ec=x%20y&d%252Ee=z");
+
+    let decoded = decode(
+        &encoded,
+        &DecodeOptions::new().with_decode_dot_in_keys(true),
+    )
+    .unwrap();
+    assert_eq!(Value::Object(decoded), original);
+}
+
+#[test]
+fn dotted_root_keys_remain_escaped_with_function_filters() {
+    let encoded = encode(
+        &obj(vec![("a.b", s("source"))]),
+        &EncodeOptions::new()
+            .with_encode_dot_in_keys(true)
+            .with_filter(Some(EncodeFilter::Function(FunctionFilter::new(
+                |prefix, _| {
+                    if prefix == "a%252Eb" {
+                        FilterResult::Replace(s("changed"))
+                    } else {
+                        FilterResult::Keep
+                    }
+                },
+            )))),
+    )
+    .unwrap();
+    assert_eq!(encoded, "a%252Eb=changed");
+}
+
+#[test]
 fn decode_pairs_uses_structured_merge_not_raw_string_rules() {
     let decoded = decode_pairs(
         vec![

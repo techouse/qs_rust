@@ -327,6 +327,49 @@ pub(crate) fn cases() -> Vec<EncodeParityCase> {
             CaseMeta::new(
                 "node-qs",
                 "stringify.js",
+                "root literal dots survive scalar and strict-null serialization",
+                "dot notation",
+                true,
+            ),
+            obj(vec![
+                ("a.b.c", s("x y")),
+                ("d.e", Value::Null),
+                ("plain", s("z")),
+            ]),
+            EncodeOptions::new()
+                .with_encode_dot_in_keys(true)
+                .with_strict_null_handling(true),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "root literal dots with encode values only",
+                "dot notation",
+                true,
+            ),
+            obj(vec![("value.dot", s("x y"))]),
+            EncodeOptions::new()
+                .with_encode_dot_in_keys(true)
+                .with_encode_values_only(true),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
+                "root literal dots with encoding disabled",
+                "dot notation",
+                true,
+            ),
+            obj(vec![("raw.dot", s("x y"))]),
+            EncodeOptions::new()
+                .with_encode_dot_in_keys(true)
+                .with_encode(false),
+        ),
+        EncodeParityCase::new(
+            CaseMeta::new(
+                "node-qs",
+                "stringify.js",
                 "percent-encoded open bracket text in top-level key",
                 "encoded brackets",
                 true,
