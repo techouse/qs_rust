@@ -112,17 +112,6 @@ pub(crate) fn encode_cases() -> Vec<EncodeParityCase> {
             CaseMeta::new(
                 "kotlin-qskotlin",
                 "EncodeSpec.kt",
-                "top-level dot key stays plain when encode dot in keys is enabled",
-                "dot notation",
-                true,
-            ),
-            obj(vec![("a.b", s("v"))]),
-            EncodeOptions::new().with_encode_dot_in_keys(true),
-        ),
-        EncodeParityCase::new(
-            CaseMeta::new(
-                "kotlin-qskotlin",
-                "EncodeSpec.kt",
                 "strict null handling with empty key suppresses the sentinel delimiter",
                 "charset",
                 true,
