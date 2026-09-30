@@ -235,28 +235,6 @@ fn duplicate_combine_keeps_concrete_array_scalar_mixes_under_limit_and_promotes_
 }
 
 #[test]
-fn bracketed_comma_group_uses_outer_list_length_for_limit() {
-    let decoded = decode(
-        "a[]=1,2,3,4,5,6",
-        &DecodeOptions::new()
-            .with_comma(true)
-            .with_list_limit(1)
-            .with_throw_on_limit_exceeded(true),
-    )
-    .unwrap();
-
-    assert_eq!(
-        decoded.get("a"),
-        Some(&Value::Array(vec![Value::Array(
-            ["1", "2", "3", "4", "5", "6"]
-                .into_iter()
-                .map(|value| Value::String(value.to_owned()))
-                .collect(),
-        )]))
-    );
-}
-
-#[test]
 fn bracketed_comma_group_overflows_when_outer_limit_is_zero() {
     let decoded = decode(
         "a[]=1,2",
@@ -276,6 +254,39 @@ fn bracketed_comma_group_overflows_when_outer_limit_is_zero() {
             )]
             .into(),
         ))
+    );
+}
+
+#[test]
+fn bracketed_comma_group_hard_limit_preserves_at_limit_shape() {
+    let options = DecodeOptions::new()
+        .with_comma(true)
+        .with_list_limit(3)
+        .with_throw_on_limit_exceeded(true);
+    let error = decode("a[]=1,2,3,4", &options).unwrap_err();
+    assert!(error.is_list_limit_exceeded());
+    assert_eq!(error.list_limit(), Some(3));
+
+    let decoded = decode("a[]=1,2,3", &options).unwrap();
+    assert_eq!(
+        decoded.get("a"),
+        Some(&Value::Array(vec![Value::Array(
+            ["1", "2", "3"]
+                .into_iter()
+                .map(|value| Value::String(value.to_owned()))
+                .collect(),
+        )]))
+    );
+
+    let soft = decode("a[]=1,2,3,4", &options.with_throw_on_limit_exceeded(false)).unwrap();
+    assert_eq!(
+        soft.get("a"),
+        Some(&Value::Array(vec![Value::Array(
+            ["1", "2", "3", "4"]
+                .into_iter()
+                .map(|value| Value::String(value.to_owned()))
+                .collect(),
+        )]))
     );
 }
 

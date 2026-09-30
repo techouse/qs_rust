@@ -43,7 +43,6 @@ fn list_builders_cover_limit_overflow_and_segment_decoding() {
             .with_list_limit(1)
             .with_throw_on_limit_exceeded(true),
         1,
-        true,
     )
     .unwrap_err();
     assert!(error.is_list_limit_exceeded());
@@ -154,7 +153,6 @@ fn builder_limit_and_custom_array_decode_edges_are_covered() {
             .with_list_limit(1)
             .with_throw_on_limit_exceeded(true),
         0,
-        true,
     )
     .unwrap_err();
     assert!(error.is_list_limit_exceeded());
@@ -179,42 +177,6 @@ fn builder_limit_and_custom_array_decode_edges_are_covered() {
         decoded_array.into_node(),
         Node::Array(vec![scalar("A"), scalar("B")])
     );
-}
-
-#[test]
-fn bracketed_comma_groups_count_as_one_outer_list_item() {
-    let options = DecodeOptions::new()
-        .with_comma(true)
-        .with_list_limit(1)
-        .with_throw_on_limit_exceeded(true);
-
-    let direct = build_direct_value(
-        Some("1,2,3,4,5,6"),
-        ScannedPart::new("a[]=1,2,3,4,5,6"),
-        Charset::Utf8,
-        &options,
-        0,
-    )
-    .unwrap();
-    assert!(matches!(
-        direct,
-        DirectBuiltValue::Concrete(Value::Array(outer))
-            if matches!(outer.as_slice(), [Value::Array(inner)] if inner.len() == 6)
-    ));
-
-    let custom = build_custom_value(
-        Some("1,2,3,4,5,6"),
-        ScannedPart::new("a[]=1,2,3,4,5,6"),
-        Charset::Utf8,
-        &options,
-        0,
-    )
-    .unwrap();
-    assert!(matches!(
-        custom.into_node(),
-        Node::Array(outer)
-            if matches!(outer.as_slice(), [Node::Array(inner)] if inner.len() == 6)
-    ));
 }
 
 #[test]
