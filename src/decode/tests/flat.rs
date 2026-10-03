@@ -315,26 +315,60 @@ fn cumulative_comma_overflow_decodes_later_token_before_combine_throws() {
 }
 
 #[test]
-fn bracketed_comma_limit_zero_decodes_inner_values_before_outer_throw() {
+fn bracketed_comma_group_strict_limit_precedes_value_decoding() {
+    use parking_lot::Mutex;
+
+    for (query, limit) in [("a[]=red,blue,green", 2), ("a[]=red,blue", 0)] {
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let capture = Arc::clone(&seen);
+        let error = decode(
+            query,
+            &DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(limit)
+                .with_throw_on_limit_exceeded(true)
+                .with_decoder(Some(DecodeDecoder::new(move |input, _, kind| {
+                    if matches!(kind, DecodeKind::Value) {
+                        capture.lock().push(input.to_owned());
+                        input.to_ascii_uppercase()
+                    } else {
+                        input.to_owned()
+                    }
+                }))),
+        )
+        .unwrap_err();
+
+        assert!(error.is_list_limit_exceeded());
+        assert_eq!(error.list_limit(), Some(limit));
+        assert!(seen.lock().is_empty());
+    }
+
     let seen = Arc::new(Mutex::new(Vec::new()));
     let capture = Arc::clone(&seen);
-    let error = decode(
-        "a[]=1,2",
+    let decoded = decode(
+        "a[]=red,blue",
         &DecodeOptions::new()
             .with_comma(true)
-            .with_list_limit(0)
+            .with_list_limit(2)
             .with_throw_on_limit_exceeded(true)
             .with_decoder(Some(DecodeDecoder::new(move |input, _, kind| {
                 if matches!(kind, DecodeKind::Value) {
-                    capture.lock().unwrap().push(input.to_owned());
+                    capture.lock().push(input.to_owned());
+                    input.to_ascii_uppercase()
+                } else {
+                    input.to_owned()
                 }
-                input.to_owned()
             }))),
     )
-    .unwrap_err();
-
-    assert!(error.is_list_limit_exceeded());
-    assert_eq!(*seen.lock().unwrap(), vec!["1".to_owned(), "2".to_owned()]);
+    .unwrap();
+    assert_eq!(
+        decoded.get("a"),
+        Some(&Value::Array(vec![Value::Array(vec![
+            Value::String("RED".to_owned()),
+            Value::String("BLUE".to_owned()),
+        ])]))
+    );
+    assert_eq!(*seen.lock(), ["red", "blue"]);
 }
 
 #[test]

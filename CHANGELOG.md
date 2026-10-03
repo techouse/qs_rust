@@ -1,3 +1,10 @@
+## 1.0.5
+
+* [FIX] enforce strict `list_limit` checks on each `[]=` comma group before splitting or invoking custom value decoders, closing the bracket-key bypass while preserving non-throwing behavior
+* [FIX] apply `encode_dot_in_keys` to top-level primitive-valued keys, preserving literal dots through round trips and function filters
+* [CHORE] expand Node `qs` 6.16.0 parity coverage for strict comma-group boundaries and top-level dotted keys
+* [DOCS] update the Node semantic baseline to 6.16.0 and clarify strict inner comma-group limits
+
 ## 1.0.4
 
 * [FIX] align cumulative `list_limit` handling with Node `qs` 6.15.3 across duplicate keys, comma values, bracket notation, mixed scalar/index/append paths, sparse lists, and nested merges, including strict `DecodeError::ListLimitExceeded` errors and numeric-key overflow fallback

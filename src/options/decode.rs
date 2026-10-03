@@ -138,7 +138,8 @@ impl DecodeOptions {
     /// comma values, bracket notation, numeric indices, and mixed or nested
     /// merges. Sparse indices count through the resulting list length,
     /// including gaps. Comma groups assigned through `[]=` count as one outer
-    /// list element regardless of the inner group size.
+    /// list element. In strict mode, each inner comma group must also fit the
+    /// threshold; oversized groups fail before splitting or value decoding.
     pub fn with_list_limit(mut self, list_limit: usize) -> Self {
         self.list_limit = list_limit;
         self

@@ -243,6 +243,12 @@ assert_eq!(scalars.get("b"), Some(&Value::String("true".to_owned())));
 assert_eq!(scalars.get("c"), Some(&Value::String("null".to_owned())));
 ```
 
+A comma group assigned through `[]=` counts as one outer list element. With
+`throw_on_limit_exceeded` enabled, its inner item count must also fit
+`list_limit`; an oversized group fails before splitting or calling a custom
+value decoder. Non-throwing comma behavior is unchanged. `parameter_limit`
+counts query parameters, not the values inside a comma group.
+
 ### Charset Sentinels, Numeric Entities, and Strict Null Handling
 
 ```rust
@@ -438,6 +444,18 @@ assert_eq!(
     )
     .unwrap(),
     "name%252Eobj.first=John&name%252Eobj.last=Doe"
+);
+
+let dotted_scalar_key = Value::Object(
+    [("a.b".to_owned(), Value::String("c".to_owned()))].into(),
+);
+assert_eq!(
+    encode(
+        &dotted_scalar_key,
+        &EncodeOptions::new().with_encode_dot_in_keys(true),
+    )
+    .unwrap(),
+    "a%252Eb=c"
 );
 
 let empty_list = Value::Object(
@@ -692,7 +710,7 @@ cd tests/comparison/js
 pnpm install --frozen-lockfile
 ```
 
-The checked-in `pnpm-lock.yaml` pins `qs` to `6.15.3`.
+The checked-in `pnpm-lock.yaml` pins `qs` to `6.16.0`.
 
 Rust-specific behavior lives alongside that parity layer:
 
@@ -791,7 +809,7 @@ This repository now tracks the published `1.0.0` contract. The intended `1.x` co
 
 After `1.0.0`, changes should stay focused on bug fixes, test additions, documentation improvements, measurement-backed performance work, and additive features that keep the current `1.x` non-goals explicit.
 
-- Node `qs` `6.15.3` remains the semantic baseline for shared public query-string behavior.
+- Node `qs` `6.16.0` remains the semantic baseline for shared public query-string behavior.
 - C# remains the architectural reference for internal design decisions. Other sibling ports are informative, not normative.
 - The semantic core is shared across the dynamic API, the typed option/enums, the callback wrappers, and the optional `serde` bridge (`from_str` / `to_string`).
 - [docs/divergences.md](https://github.com/techouse/qs_rust/blob/main/docs/divergences.md) records the intentional `1.x` boundaries: host-object reflection, cycles, runtime bridge behavior, and other non-goals remain unsupported by design.

@@ -501,6 +501,7 @@ pub(crate) fn cases() -> Vec<DecodeParityCase> {
         ),
     ];
     cases.extend(qs_6_15_3_cases());
+    cases.extend(qs_6_16_0_cases());
     cases
 }
 
@@ -620,15 +621,6 @@ fn qs_6_15_3_cases() -> Vec<DecodeParityCase> {
             DecodeOptions::new()
                 .with_comma(true)
                 .with_list_limit(5)
-                .with_throw_on_limit_exceeded(true),
-        ),
-        node_parse_case(
-            "bracketed comma group counts as one outer item",
-            "comma",
-            "a[]=1,2,3,4,5,6",
-            DecodeOptions::new()
-                .with_comma(true)
-                .with_list_limit(1)
                 .with_throw_on_limit_exceeded(true),
         ),
         node_parse_case(
@@ -762,6 +754,80 @@ fn qs_6_15_3_cases() -> Vec<DecodeParityCase> {
             "unbalanced brackets",
             "a[b]extra=v",
             DecodeOptions::new(),
+        ),
+    ]
+}
+
+fn qs_6_16_0_cases() -> Vec<DecodeParityCase> {
+    vec![
+        node_parse_case(
+            "bracketed comma inner group throws over limit",
+            "comma",
+            "a[]=1,2,3,4",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(3)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "encoded bracketed comma inner group throws over limit",
+            "comma",
+            "a%5B%5D=1,2,3,4",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(3)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "nested bracketed comma inner group throws over limit",
+            "comma",
+            "a[b][]=1,2,3,4",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(3)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "bracketed comma inner group succeeds at limit",
+            "comma",
+            "a[]=1,2,3",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(3)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "encoded comma remains one bracketed value",
+            "comma",
+            "a[]=1%2C2",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(1)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "trailing empty comma item counts toward inner limit",
+            "comma",
+            "a[]=1,2,",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(2)
+                .with_throw_on_limit_exceeded(true),
+        ),
+        node_parse_case(
+            "oversized bracketed comma inner group stays nested in soft mode",
+            "comma",
+            "a[]=1,2,3,4",
+            DecodeOptions::new().with_comma(true).with_list_limit(3),
+        ),
+        node_parse_case(
+            "in-limit comma groups enforce cumulative outer limit",
+            "comma",
+            "a[]=1,2&a[]=3,4&a[]=5,6",
+            DecodeOptions::new()
+                .with_comma(true)
+                .with_list_limit(2)
+                .with_throw_on_limit_exceeded(true),
         ),
     ]
 }

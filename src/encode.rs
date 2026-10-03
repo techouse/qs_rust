@@ -93,8 +93,7 @@ fn append_root_output(
                 let Some(child) = object.get(&key) else {
                     continue;
                 };
-                let path =
-                    KeyPathNode::from_raw(raw_root_key_component(&key, Some(child), options));
+                let path = KeyPathNode::from_raw(raw_key_component(&key, options));
                 append_encoded_node(body, has_parts, child, path, options, 0)?;
             }
         }
@@ -196,17 +195,6 @@ fn ordered_array_indices(items: &[Value], options: &EncodeOptions) -> Vec<usize>
 
 fn raw_key_component(key: &str, options: &EncodeOptions) -> String {
     if options.allow_dots && options.encode_dot_in_keys {
-        key.replace('.', encoded_dot_escape(options))
-    } else {
-        key.to_owned()
-    }
-}
-
-fn raw_root_key_component(key: &str, value: Option<&Value>, options: &EncodeOptions) -> String {
-    if options.allow_dots
-        && options.encode_dot_in_keys
-        && matches!(value, Some(Value::Array(_)) | Some(Value::Object(_)))
-    {
         key.replace('.', encoded_dot_escape(options))
     } else {
         key.to_owned()
